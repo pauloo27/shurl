@@ -1,9 +1,7 @@
 package main
 
-import (
-	"log/slog"
-)
+import "github.com/pauloo27/shurl/internal/bootstrap"
 
 func main() {
-	slog.Info("Hello, World!")
+	bootstrap.Start()
 }
