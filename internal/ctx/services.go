@@ -8,6 +8,4 @@ import (
 type Services struct {
 	Config *config.Config
 	Rdb    *redis.Client
-
-	Version string
 }

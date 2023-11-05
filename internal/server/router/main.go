@@ -1,19 +1,13 @@
 package router
 
 import (
-	"fmt"
-	"net/http"
-
 	"github.com/go-chi/chi/v5"
-	"github.com/pauloo27/shurl/internal/ctx"
 	"github.com/pauloo27/shurl/internal/server/api/link"
 )
 
-func RouteApp(services *ctx.Services, root *chi.Mux) {
-	root.Route("/_", func(r chi.Router) {
-		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintf(w, "Running shurl %s", services.Version)
-		})
+func RouteApp(root *chi.Mux) {
+	root.Route("/api/v1", func(r chi.Router) {
+		r.Post("/links", link.Create)
 	})
 
 	root.Get("/{slug}", link.Redirect)

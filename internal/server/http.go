@@ -20,7 +20,7 @@ func StartServer(services *ctx.Services) error {
 	r.Use(middleware.Recoverer)
 	r.Use(servicesContext(services))
 
-	router.RouteApp(services, r)
+	router.RouteApp(r)
 
 	bindAddr := fmt.Sprintf(":%d", services.Config.Http.Port)
 

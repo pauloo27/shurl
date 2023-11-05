@@ -34,9 +34,8 @@ func Start() {
 	}
 
 	services := &ctx.Services{
-		Config:  cfg,
-		Rdb:     rdb,
-		Version: "0.0.1", // get from somewhere?
+		Config: cfg,
+		Rdb:    rdb,
 	}
 
 	err = server.StartServer(services)
