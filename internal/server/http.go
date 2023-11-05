@@ -15,8 +15,10 @@ func StartServer(shurl *app.App) error {
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
+	r.Use(loggerMiddleware)
 	r.Use(middleware.Recoverer)
+
+	routeApp(shurl, r)
 
 	bindAddr := fmt.Sprintf(":%d", shurl.Config.Http.Port)
 
