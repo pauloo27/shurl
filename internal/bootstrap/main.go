@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/lmittmann/tint"
-	"github.com/pauloo27/shurl/internal/app"
 	"github.com/pauloo27/shurl/internal/config"
+	"github.com/pauloo27/shurl/internal/ctx"
 	"github.com/pauloo27/shurl/internal/providers/redis"
 	"github.com/pauloo27/shurl/internal/server"
 )
@@ -33,12 +33,13 @@ func Start() {
 		os.Exit(1)
 	}
 
-	shurl := app.New(
-		cfg,
-		rdb,
-	)
+	services := &ctx.Services{
+		Config:  cfg,
+		Rdb:     rdb,
+		Version: "0.0.1", // get from somewhere?
+	}
 
-	err = server.StartServer(shurl)
+	err = server.StartServer(services)
 	if err != nil {
 		slog.Error("Failed to start server:", tint.Err(err))
 		os.Exit(1)

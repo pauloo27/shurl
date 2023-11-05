@@ -8,13 +8,13 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/lmittmann/tint"
-	"github.com/pauloo27/shurl/internal/server/ctx"
+	"github.com/pauloo27/shurl/internal/ctx"
 	"github.com/redis/go-redis/v9"
 )
 
 func Redirect(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
-	rdb := ctx.GetApp(c).Rdb
+	rdb := ctx.GetServices(c).Rdb
 
 	slug := chi.URLParam(r, "slug")
 
