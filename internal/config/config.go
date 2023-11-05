@@ -3,8 +3,9 @@ package config
 import "log/slog"
 
 type Config struct {
-	Log  LogConfig
-	Http HttpConfig
+	Log   *LogConfig
+	Http  *HttpConfig
+	Redis *RedisConfig
 }
 
 type LogType string
@@ -22,4 +23,10 @@ type LogConfig struct {
 
 type HttpConfig struct {
 	Port int
+}
+
+type RedisConfig struct {
+	Address  string
+	Password string
+	DB       int
 }
