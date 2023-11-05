@@ -3,7 +3,8 @@ package config
 import "log/slog"
 
 type Config struct {
-	Log LogConfig
+	Log  LogConfig
+	Http HttpConfig
 }
 
 type LogType string
@@ -17,4 +18,8 @@ const (
 type LogConfig struct {
 	Level slog.Level
 	Type  LogType
+}
+
+type HttpConfig struct {
+	Port int
 }

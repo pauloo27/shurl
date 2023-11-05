@@ -4,7 +4,10 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/lmittmann/tint"
+	"github.com/pauloo27/shurl/internal/app"
 	"github.com/pauloo27/shurl/internal/config"
+	"github.com/pauloo27/shurl/internal/server"
 )
 
 const (
@@ -22,4 +25,12 @@ func Start() {
 
 	slog.Info("Starting shurl!")
 	slog.Debug("If you can see this, debug logging is enabled!", "cool", true)
+
+	shurl := app.New(cfg)
+
+	err = server.StartServer(shurl)
+	if err != nil {
+		slog.Error("Failed to start server:", tint.Err(err))
+		os.Exit(1)
+	}
 }
