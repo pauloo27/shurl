@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/lmittmann/tint"
 	"github.com/pauloo27/shurl/internal/ctx"
+	"github.com/pauloo27/shurl/internal/server/api"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -22,11 +23,11 @@ func Redirect(w http.ResponseWriter, r *http.Request) {
 	if err := res.Err(); err != nil {
 		if errors.Is(err, redis.Nil) {
 			slog.Warn("Link not found", "slug", slug)
-			http.NotFound(w, r)
+			api.Err(w, http.StatusNotFound, api.NotFoundErr, "Link not found")
 			return
 		}
-		slog.Error("Failed to get link", "slug", slug, "err", tint.Err(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		slog.Error("Failed to get link", "slug", slug, tint.Err(err))
+		api.Err(w, http.StatusInternalServerError, api.InternalServerErr, "Something went wrong")
 		return
 	}
 
