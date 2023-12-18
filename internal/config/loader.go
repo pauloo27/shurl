@@ -6,6 +6,7 @@ import (
 )
 
 func LoadConfig(configPath string) (*Config, error) {
+	/* #nosec G304 */
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, err

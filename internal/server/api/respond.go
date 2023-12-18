@@ -17,7 +17,7 @@ const (
 func Created[T any](w http.ResponseWriter, detail T) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(detail)
+	_ = json.NewEncoder(w).Encode(detail)
 }
 
 func Err(
@@ -39,7 +39,7 @@ func DetailedError[T any](
 ) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"error":  error,
 		"detail": detail,
 	})

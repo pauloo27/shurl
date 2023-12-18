@@ -4,7 +4,7 @@ import "log/slog"
 
 type Config struct {
 	Log   *LogConfig
-	Http  *HttpConfig
+	HTTP  *HTTPConfig
 	Redis *RedisConfig
 }
 
@@ -21,7 +21,7 @@ type LogConfig struct {
 	Type  LogType
 }
 
-type HttpConfig struct {
+type HTTPConfig struct {
 	Port int
 }
 

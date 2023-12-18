@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -22,8 +23,16 @@ func StartServer(services *ctx.Services) error {
 
 	router.RouteApp(r)
 
-	bindAddr := fmt.Sprintf(":%d", services.Config.Http.Port)
+	bindAddr := fmt.Sprintf(":%d", services.Config.HTTP.Port)
 
 	slog.Info("Starting server", "addr", bindAddr)
-	return http.ListenAndServe(bindAddr, r)
+
+	server := &http.Server{
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		Handler:      r,
+		Addr:         bindAddr,
+	}
+
+	return server.ListenAndServe()
 }
