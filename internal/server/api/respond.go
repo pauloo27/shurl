@@ -12,6 +12,7 @@ const (
 	InternalServerErr ErrorType = "INTERNAL_SERVER_ERROR"
 	BadRequestErr     ErrorType = "BAD_REQUEST"
 	ValidationErr     ErrorType = "VALIDATION_ERROR"
+	UnauthorizedErr   ErrorType = "UNAUTHORIZED"
 )
 
 func Created[T any](w http.ResponseWriter, detail T) {

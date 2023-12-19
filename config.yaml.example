@@ -1,0 +1,50 @@
+log:
+  # debug, info, warn, error
+  level: 'debug'
+  # colored, text, json
+  type: 'colored'
+
+http:
+  # http api bind port
+  port: 42069
+
+redis:
+  # redis address with port
+  address: 'localhost:6379'
+  # redis password (if any)
+  password: ''
+  # redis db, whatever that means
+  db: 0
+
+public:
+  # allow public usage?
+  enabled: false
+  # TODO: how many links per ip per hour
+  limitPerIPPerHour: 5
+  # TODO: allow custom "url"
+  allowCustomSlug: false
+  # TODO: a list of the domains it may use
+  allowedDomains:
+    - localhost
+  # TODO: min url duration in seconds, use -1 for no limit
+  minDurationSec: 10
+  # TODO: max url duration in seconds, use -1 for no limit
+  maxDurationSec: 86400
+
+apps:
+  testing:
+    # api key used by the app
+    apiKey: 8140e244-0f44-42e1-a7b2-295e53e2b334
+    # enable this app?
+    enabled: true
+    # how many links per ip per hour, -1 for no limit
+    limitPerIPPerHour: -1
+    # allow custom "url"
+    allowCustomSlug: true
+    # a list of the domains it may use
+    allowedDomains:
+      - localhost
+    # min url duration in seconds, use -1 for no limit
+    minDurationSec: -1
+    # max url duration in seconds, use -1 for no limit
+    maxDurationSec: -1

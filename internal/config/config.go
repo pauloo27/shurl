@@ -1,11 +1,19 @@
 package config
 
-import "log/slog"
+import (
+	"log/slog"
+)
 
 type Config struct {
 	Log   *LogConfig
 	HTTP  *HTTPConfig
 	Redis *RedisConfig
+
+	Public *AppConfig
+
+	Apps map[string]*AppConfig
+
+	AppByAPIKey map[string]*AppConfig `yaml:"-" json:"-"`
 }
 
 type LogType string
@@ -29,4 +37,14 @@ type RedisConfig struct {
 	Address  string
 	Password string
 	DB       int
+}
+
+type AppConfig struct {
+	Enabled           bool
+	APIKey            string
+	LimitPerIPPerHour int
+	AllowCustomSlug   bool
+	AllowedDomains    []string
+	MinDurationSec    int
+	MaxDurationSec    int
 }

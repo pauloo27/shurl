@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/ghodss/yaml"
 	"os"
+
+	"github.com/ghodss/yaml"
 )
 
 func LoadConfig(configPath string) (*Config, error) {
@@ -17,6 +18,12 @@ func LoadConfig(configPath string) (*Config, error) {
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
 		return nil, err
+	}
+
+	config.AppByAPIKey = make(map[string]*AppConfig)
+
+	for _, app := range config.Apps {
+		config.AppByAPIKey[app.APIKey] = app
 	}
 
 	return &config, nil

@@ -8,6 +8,7 @@ import (
 
 	"github.com/lmittmann/tint"
 	gonanoid "github.com/matoous/go-nanoid/v2"
+	"github.com/pauloo27/shurl/internal/config"
 	"github.com/pauloo27/shurl/internal/ctx"
 	"github.com/pauloo27/shurl/internal/server/api"
 	"github.com/pauloo27/shurl/internal/server/validator"
@@ -26,7 +27,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c := r.Context()
-	rdb := ctx.GetServices(c).Rdb
+	services := ctx.GetServices(c)
+	rdb := services.Rdb
+	cfg := services.Config
 
 	slog.Info("Creating link", "slug", body.Slug, "url", body.OriginalURL)
 
@@ -41,10 +44,22 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		slug = randomSlug
 	}
 
+	var app *config.AppConfig
+
+	apiKey := r.Header.Get("X-API-Key")
+	if apiKey == "" {
+		app = cfg.Public
+	} else {
+		app = cfg.AppByAPIKey[apiKey]
+	}
+	if app == nil || !app.Enabled {
+		api.Err(w, http.StatusUnauthorized, api.UnauthorizedErr, "Invalid API key")
+		return
+	}
+
 	domain := body.Domain
 	if domain == "" {
-		// TODO: get from config
-		domain = "localhost"
+		domain = app.AllowedDomains[0]
 	}
 
 	// TODO: create a model type
@@ -55,7 +70,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		"created_at": time.Now(),
 	}
 
-	// TODO: check if slug already exists
+	// TODO: use TX; check if slug already exists
 	res := rdb.HSet(c, fmt.Sprintf("link:%s", slug), link)
 
 	if err := res.Err(); err != nil {
