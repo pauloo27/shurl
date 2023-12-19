@@ -19,7 +19,7 @@ func Redirect(w http.ResponseWriter, r *http.Request) {
 
 	slug := chi.URLParam(r, "slug")
 
-	res := rdb.Get(c, fmt.Sprintf("link:%s", slug))
+	res := rdb.HGet(c, fmt.Sprintf("link:%s", slug), "url")
 	if err := res.Err(); err != nil {
 		if errors.Is(err, redis.Nil) {
 			slog.Warn("Link not found", "slug", slug)

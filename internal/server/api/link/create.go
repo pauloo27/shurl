@@ -52,6 +52,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	} else {
 		app = cfg.AppByAPIKey[apiKey]
 	}
+
 	if app == nil || !app.Enabled {
 		api.Err(w, http.StatusUnauthorized, api.UnauthorizedErr, "Invalid API key")
 		return
