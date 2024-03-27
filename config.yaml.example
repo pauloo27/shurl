@@ -3,6 +3,8 @@ log:
   level: 'debug'
   # colored, text, json
   type: 'colored'
+  # if true, will show the source of the log (file and line)
+  showSource: true
 
 http:
   # http api bind port

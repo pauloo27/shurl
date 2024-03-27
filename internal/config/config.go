@@ -25,8 +25,9 @@ const (
 )
 
 type LogConfig struct {
-	Level slog.Level
-	Type  LogType
+	Level      slog.Level
+	Type       LogType
+	ShowSource bool
 }
 
 type HTTPConfig struct {
