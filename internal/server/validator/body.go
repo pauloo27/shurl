@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/lmittmann/tint"
 	"github.com/pauloo27/shurl/internal/server/api"
 )
 
@@ -16,7 +15,7 @@ func MustGetBody[T any](w http.ResponseWriter, r *http.Request) (T, bool) {
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		slog.Error("Failed to decode body", tint.Err(err))
+		slog.Error("Failed to decode body", "err", err)
 		if errors.Is(err, io.EOF) {
 			api.Err(w, http.StatusBadRequest, api.BadRequestErr, "Missing body")
 		} else {

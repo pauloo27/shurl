@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/lmittmann/tint"
 	"github.com/pauloo27/shurl/internal/config"
 	"github.com/pauloo27/shurl/internal/ctx"
 	"github.com/pauloo27/shurl/internal/providers/redis"
@@ -19,7 +18,7 @@ func Start(cfg *config.Config) {
 
 	rdb, err := redis.New(cfg.Redis)
 	if err != nil {
-		slog.Error("Failed to connect to redis:", tint.Err(err))
+		slog.Error("Failed to connect to redis:", "err", err)
 		os.Exit(1)
 	}
 
@@ -30,7 +29,7 @@ func Start(cfg *config.Config) {
 
 	err = server.StartServer(services)
 	if err != nil {
-		slog.Error("Failed to start server:", tint.Err(err))
+		slog.Error("Failed to start server:", "err", err)
 		os.Exit(1)
 	}
 }

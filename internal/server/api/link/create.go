@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lmittmann/tint"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/pauloo27/shurl/internal/config"
 	"github.com/pauloo27/shurl/internal/ctx"
@@ -37,7 +36,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	if slug == "" {
 		randomSlug, err := gonanoid.New()
 		if err != nil {
-			slog.Error("Failed to generate random slug", tint.Err(err))
+			slog.Error("Failed to generate random slug", "err", err)
 			api.Err(w, http.StatusInternalServerError, api.InternalServerErr, "Something went wrong")
 			return
 		}
@@ -75,7 +74,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	res := rdb.HSet(c, fmt.Sprintf("link:%s", slug), link)
 
 	if err := res.Err(); err != nil {
-		slog.Error("Failed to create link", "slug", body.Slug, tint.Err(err))
+		slog.Error("Failed to create link", "slug", body.Slug, "err", err)
 		api.Err(w, http.StatusInternalServerError, api.InternalServerErr, "Something went wrong")
 		return
 	}

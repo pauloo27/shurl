@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/lmittmann/tint"
 	"github.com/pauloo27/shurl/internal/ctx"
 	"github.com/pauloo27/shurl/internal/server/api"
 	"github.com/redis/go-redis/v9"
@@ -26,7 +25,7 @@ func Redirect(w http.ResponseWriter, r *http.Request) {
 			api.Err(w, http.StatusNotFound, api.NotFoundErr, "Link not found")
 			return
 		}
-		slog.Error("Failed to get link", "slug", slug, tint.Err(err))
+		slog.Error("Failed to get link", "slug", slug, "err", err)
 		api.Err(w, http.StatusInternalServerError, api.InternalServerErr, "Something went wrong")
 		return
 	}
