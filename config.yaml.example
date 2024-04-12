@@ -10,12 +10,12 @@ http:
   # http api bind port
   port: 42069
 
-redis:
-  # redis address with port
+redict:
+  # redict address with port
   address: 'localhost:6379'
-  # redis password (if any)
+  # redict password (if any)
   password: ''
-  # redis db, whatever that means
+  # redict db, whatever that means
   db: 0
 
 public:

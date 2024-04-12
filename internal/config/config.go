@@ -5,9 +5,9 @@ import (
 )
 
 type Config struct {
-	Log   *LogConfig
-	HTTP  *HTTPConfig
-	Redis *RedisConfig
+	Log    *LogConfig
+	HTTP   *HTTPConfig
+	Redict *RedictConfig
 
 	Public *AppConfig
 
@@ -34,7 +34,7 @@ type HTTPConfig struct {
 	Port int
 }
 
-type RedisConfig struct {
+type RedictConfig struct {
 	Address  string
 	Password string
 	DB       int

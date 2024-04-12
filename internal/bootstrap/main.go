@@ -6,7 +6,7 @@ import (
 
 	"github.com/pauloo27/shurl/internal/config"
 	"github.com/pauloo27/shurl/internal/ctx"
-	"github.com/pauloo27/shurl/internal/providers/redis"
+	"github.com/pauloo27/shurl/internal/providers/redict"
 	"github.com/pauloo27/shurl/internal/server"
 )
 
@@ -16,7 +16,7 @@ func Start(cfg *config.Config) {
 	slog.Info("Starting shurl!")
 	slog.Debug("If you can see this, debug logging is enabled!", "cool", true)
 
-	rdb, err := redis.New(cfg.Redis)
+	rdb, err := redis.New(cfg.Redict)
 	if err != nil {
 		slog.Error("Failed to connect to redis:", "err", err)
 		os.Exit(1)
