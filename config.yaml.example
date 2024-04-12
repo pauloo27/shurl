@@ -27,7 +27,7 @@ public:
   allowCustomSlug: false
   # TODO: a list of the domains it may use
   allowedDomains:
-    - localhost
+    - localhost:42069
   # TODO: min url duration in seconds, use -1 for no limit
   minDurationSec: 10
   # TODO: max url duration in seconds, use -1 for no limit
@@ -45,7 +45,7 @@ apps:
     allowCustomSlug: true
     # a list of the domains it may use
     allowedDomains:
-      - localhost
+      - localhost:42069
     # min url duration in seconds, use -1 for no limit
     minDurationSec: -1
     # max url duration in seconds, use -1 for no limit

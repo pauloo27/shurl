@@ -1,6 +1,7 @@
 package link
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/pauloo27/shurl/internal/config"
 	"github.com/pauloo27/shurl/internal/ctx"
+	"github.com/pauloo27/shurl/internal/models"
 	"github.com/pauloo27/shurl/internal/server/api"
 	"github.com/pauloo27/shurl/internal/server/validator"
 )
@@ -17,7 +19,12 @@ type CreateLinkBody struct {
 	Slug        string `json:"slug,omitempty" validate:"omitempty,min=3,max=20"`
 	Domain      string `json:"domain,omitempty" validate:"omitempty,hostname"`
 	OriginalURL string `json:"original_url" validate:"required,http_url"`
+	TTL         *int   `json:"ttl" validate:"required"`
 }
+
+const (
+	DefaultSlugLength = 8
+)
 
 func Create(w http.ResponseWriter, r *http.Request) {
 	body, ok := validator.MustGetBody[CreateLinkBody](w, r)
@@ -27,20 +34,19 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	c := r.Context()
 	services := ctx.GetServices(c)
-	rdb := services.Rdb
 	cfg := services.Config
-
-	slog.Info("Creating link", "slug", body.Slug, "url", body.OriginalURL)
+	rdb := services.Rdb
 
 	slug := body.Slug
 	if slug == "" {
-		randomSlug, err := gonanoid.New()
+		randomSlug, err := gonanoid.New(DefaultSlugLength)
 		if err != nil {
 			slog.Error("Failed to generate random slug", "err", err)
 			api.Err(w, http.StatusInternalServerError, api.InternalServerErr, "Something went wrong")
 			return
 		}
 		slug = randomSlug
+		slog.Info("Slug not provided, generating a random one", "slug", slug)
 	}
 
 	var app *config.AppConfig
@@ -59,23 +65,37 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	domain := body.Domain
 	if domain == "" {
+		slog.Info("Domain not provided, using the first allowed domain from app", "domain", domain)
 		domain = app.AllowedDomains[0]
 	}
 
-	// TODO: create a model type
-	link := map[string]any{
-		"slug":       slug,
-		"domain":     domain,
-		"url":        body.OriginalURL,
-		"created_at": time.Now(),
+	slog.Info("Creating link", "domain", domain, "slug", slug, "url", body.OriginalURL)
+
+	ttlInSecs := *body.TTL
+	var ttl time.Duration
+
+	if ttlInSecs != 0 {
+		ttl = time.Duration(ttlInSecs) * time.Second
 	}
 
-	// TODO: use TX; check if slug already exists
-	res := rdb.HSet(c, fmt.Sprintf("link:%s", slug), link)
+	link := models.Link{
+		Slug:   slug,
+		Domain: domain,
+		URL:    body.OriginalURL,
+		TTL:    ttlInSecs,
+	}
 
-	if err := res.Err(); err != nil {
-		slog.Error("Failed to create link", "slug", body.Slug, "err", err)
+	key := fmt.Sprintf("link:%s/%s", domain, slug)
+	cmd := rdb.SetNX(context.Background(), key, body.OriginalURL, ttl)
+	if cmd.Err() != nil {
+		slog.Error("Failed to create link", "err", cmd.Err())
 		api.Err(w, http.StatusInternalServerError, api.InternalServerErr, "Something went wrong")
+		return
+	}
+
+	if !cmd.Val() {
+		slog.Error("Link already exists", "slug", slug)
+		api.Err(w, http.StatusConflict, api.ConflictErr, "Link already exists")
 		return
 	}
 

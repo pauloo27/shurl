@@ -10,6 +10,7 @@ type ErrorType string
 const (
 	NotFoundErr       ErrorType = "NOT_FOUND"
 	InternalServerErr ErrorType = "INTERNAL_SERVER_ERROR"
+	ConflictErr       ErrorType = "CONFLICT"
 	BadRequestErr     ErrorType = "BAD_REQUEST"
 	ValidationErr     ErrorType = "VALIDATION_ERROR"
 	UnauthorizedErr   ErrorType = "UNAUTHORIZED"

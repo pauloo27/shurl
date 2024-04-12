@@ -20,7 +20,7 @@ func New(cfg *config.RedictConfig) (*redis.Client, error) {
 		return nil, err
 	}
 
-	slog.Info("Connected to Redis", "addr", cfg.Address)
+	slog.Info("Connected to Redict", "addr", cfg.Address)
 
 	return rdb, nil
 }

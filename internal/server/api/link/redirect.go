@@ -16,12 +16,16 @@ func Redirect(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 	rdb := ctx.GetServices(c).Rdb
 
+	domain := r.Host
 	slug := chi.URLParam(r, "slug")
 
-	res := rdb.HGet(c, fmt.Sprintf("link:%s", slug), "url")
+	key := fmt.Sprintf("link:%s/%s", domain, slug)
+
+	res := rdb.Get(c, key)
+
 	if err := res.Err(); err != nil {
 		if errors.Is(err, redis.Nil) {
-			slog.Warn("Link not found", "slug", slug)
+			slog.Warn("Link not found", "domain", domain, "slug", slug)
 			api.Err(w, http.StatusNotFound, api.NotFoundErr, "Link not found")
 			return
 		}
@@ -30,7 +34,7 @@ func Redirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	slog.Info("Redirecting", "slug", slug, "url", res.Val())
+	slog.Info("Redirecting", "domain", domain, "slug", slug, "url", res.Val())
 
 	http.Redirect(w, r, res.Val(), http.StatusTemporaryRedirect)
 }
