@@ -17,7 +17,7 @@ import (
 
 type CreateLinkBody struct {
 	Slug        string `json:"slug,omitempty" validate:"omitempty,min=3,max=20"`
-	Domain      string `json:"domain,omitempty" validate:"omitempty,hostname"`
+	Domain      string `json:"domain,omitempty" validate:"omitempty"`
 	OriginalURL string `json:"original_url" validate:"required,http_url"`
 	TTL         *int   `json:"ttl" validate:"required"`
 }
@@ -67,6 +67,18 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	if domain == "" {
 		slog.Info("Domain not provided, using the first allowed domain from app", "domain", domain)
 		domain = app.AllowedDomains[0]
+	} else {
+		allowed := false
+		for _, allowedDomain := range app.AllowedDomains {
+			if domain == allowedDomain {
+				allowed = true
+				break
+			}
+		}
+		if !allowed {
+			api.Err(w, http.StatusForbidden, api.ForbiddenErr, "Domain not allowed for this app")
+			return
+		}
 	}
 
 	slog.Info("Creating link", "domain", domain, "slug", slug, "url", body.OriginalURL)

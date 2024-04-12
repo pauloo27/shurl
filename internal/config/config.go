@@ -41,11 +41,11 @@ type RedictConfig struct {
 }
 
 type AppConfig struct {
-	Enabled           bool
-	APIKey            string
-	LimitPerIPPerHour int
-	AllowCustomSlug   bool
-	AllowedDomains    []string
-	MinDurationSec    int
-	MaxDurationSec    int
+	Enabled        bool
+	APIKey         string
+	AllowedDomains []string
+	//LimitPerIPPerHour int TODO:
+	//AllowCustomSlug bool TODO:
+	//MinDurationSec  int TODO:
+	//MaxDurationSec  int TODO:
 }
