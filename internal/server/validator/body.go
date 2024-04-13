@@ -10,6 +10,10 @@ import (
 	"github.com/pauloo27/shurl/internal/server/api"
 )
 
+/*
+MustGetBody is a helper function that decodes the body of an HTTP request into a struct and validates it. Returns the struct and a bool that is true if it's valid and false otherwise.
+The function writes an error response to the response writer if the body is missing or if the body is invalid.
+*/
 func MustGetBody[T any](w http.ResponseWriter, r *http.Request) (T, bool) {
 	var body T
 
@@ -24,7 +28,7 @@ func MustGetBody[T any](w http.ResponseWriter, r *http.Request) (T, bool) {
 		return body, false
 	}
 
-	validationErrors := Validate[T](body)
+	validationErrors := Validate(body)
 
 	if validationErrors == nil {
 		return body, true
