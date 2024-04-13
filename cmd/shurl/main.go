@@ -13,7 +13,7 @@ const (
 )
 
 func main() {
-	cfg, err := config.LoadConfig(DefaultConfigPath)
+	cfg, err := config.LoadConfigFromFile(DefaultConfigPath)
 	if err != nil {
 		slog.Error("Failed to load config:", "err", err)
 		os.Exit(1)
