@@ -2,6 +2,8 @@ package link_test
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -9,6 +11,7 @@ import (
 
 	"github.com/pauloo27/shurl/internal/config"
 	"github.com/pauloo27/shurl/internal/mocker"
+	"github.com/pauloo27/shurl/internal/models"
 	"github.com/pauloo27/shurl/internal/server/api/link"
 	"github.com/pauloo27/shurl/internal/server/validator"
 	"github.com/stretchr/testify/assert"
@@ -90,12 +93,12 @@ const (
 
 func TestAuthorization(t *testing.T) {
 	t.Run("With no api key and public api disabled", func(t *testing.T) {
-		config := &config.Config{
+		cfg := &config.Config{
 			Public: &config.AppConfig{
 				Enabled: false,
 			},
 		}
-		res, err := callCreateHandler(config, "", `{"original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(cfg, "", `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusUnauthorized, res.Status)
@@ -106,13 +109,30 @@ func TestAuthorization(t *testing.T) {
 		)
 	})
 
+	t.Run("With public api enabled, but no domain", func(t *testing.T) {
+		cfg := &config.Config{
+			Public: &config.AppConfig{
+				Enabled: true,
+			},
+		}
+		res, err := callCreateHandler(cfg, "", `{"original_url": "http://google.com", "ttl": 20}`)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusForbidden, res.Status)
+		assert.Equal(
+			t,
+			`{"detail":{"message":"No allowed domains for this app"},"error":"FORBIDDEN"}`,
+			strings.TrimSpace(res.Body),
+		)
+	})
+
 	t.Run("With invalid api key", func(t *testing.T) {
 		app := &config.AppConfig{
 			APIKey:  secretApiKey,
 			Enabled: true,
 		}
 
-		config := &config.Config{
+		cfg := &config.Config{
 			Public: &config.AppConfig{
 				Enabled: false,
 			},
@@ -120,7 +140,7 @@ func TestAuthorization(t *testing.T) {
 				"my-app": app,
 			},
 		}
-		res, err := callCreateHandler(config, "wrong-api-key", `{"original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(cfg, "wrong-api-key", `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusUnauthorized, res.Status)
@@ -137,7 +157,7 @@ func TestAuthorization(t *testing.T) {
 			Enabled: false,
 		}
 
-		config := &config.Config{
+		cfg := &config.Config{
 			Public: &config.AppConfig{
 				Enabled: false,
 			},
@@ -145,7 +165,7 @@ func TestAuthorization(t *testing.T) {
 				"my-app": app,
 			},
 		}
-		res, err := callCreateHandler(config, secretApiKey, `{"original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(cfg, secretApiKey, `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusUnauthorized, res.Status)
@@ -157,13 +177,13 @@ func TestAuthorization(t *testing.T) {
 	})
 
 	t.Run("With public api enabled", func(t *testing.T) {
-		config := &config.Config{
+		cfg := &config.Config{
 			Public: &config.AppConfig{
 				Enabled:        true,
 				AllowedDomains: []string{"localhost"},
 			},
 		}
-		res, err := callCreateHandler(config, "", `{"original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(cfg, "", `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.Status)
@@ -176,7 +196,7 @@ func TestAuthorization(t *testing.T) {
 			AllowedDomains: []string{"localhost"},
 		}
 
-		config := &config.Config{
+		cfg := &config.Config{
 			Public: &config.AppConfig{
 				Enabled: false,
 			},
@@ -184,7 +204,7 @@ func TestAuthorization(t *testing.T) {
 				"my-app": app,
 			},
 		}
-		res, err := callCreateHandler(config, secretApiKey, `{"original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(cfg, secretApiKey, `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.Status)
@@ -197,7 +217,7 @@ func TestAuthorization(t *testing.T) {
 			AllowedDomains: []string{"localhost"},
 		}
 
-		config := &config.Config{
+		cfg := &config.Config{
 			Public: &config.AppConfig{
 				Enabled: false,
 			},
@@ -205,7 +225,7 @@ func TestAuthorization(t *testing.T) {
 				"my-app": app,
 			},
 		}
-		res, err := callCreateHandler(config, secretApiKey, `{"domain": "google.com", "original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(cfg, secretApiKey, `{"domain": "google.com", "original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusForbidden, res.Status)
@@ -214,5 +234,162 @@ func TestAuthorization(t *testing.T) {
 			`{"detail":{"message":"Domain not allowed for this app"},"error":"FORBIDDEN"}`,
 			strings.TrimSpace(res.Body),
 		)
+	})
+}
+
+func TestInvalidData(t *testing.T) {
+	t.Run("With invalid json", func(t *testing.T) {
+		cfg := &config.Config{}
+		res, err := callCreateHandler(cfg, "", `{"`)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusBadRequest, res.Status)
+		assert.Equal(
+			t,
+			`{"detail":{"message":"unexpected EOF"},"error":"BAD_REQUEST"}`,
+			strings.TrimSpace(res.Body),
+		)
+	})
+
+	t.Run("With missing ttl", func(t *testing.T) {
+		cfg := &config.Config{}
+		res, err := callCreateHandler(cfg, "", `{"original_url": "https://google.com"}`)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusUnprocessableEntity, res.Status)
+		assert.Equal(
+			t,
+			`{"detail":[{"field":"ttl","error":"required"}],"error":"VALIDATION_ERROR"}`,
+			strings.TrimSpace(res.Body),
+		)
+	})
+
+	t.Run("Rdb is closed", func(t *testing.T) {
+		err := rdb.Close()
+		assert.NoError(t, err)
+
+		cfg := &config.Config{
+			Public: &config.AppConfig{
+				Enabled:        true,
+				AllowedDomains: []string{"localhost"},
+			},
+		}
+
+		res, err := callCreateHandler(cfg, "", `{"original_url": "https://google.com", "ttl": 20}`)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusInternalServerError, res.Status)
+		assert.Equal(
+			t,
+			`{"detail":{"message":"Something went wrong"},"error":"INTERNAL_SERVER_ERROR"}`,
+			strings.TrimSpace(res.Body),
+		)
+
+		rdb = mocker.MakeRedictMock()
+	})
+}
+
+func TestCreation(t *testing.T) {
+	rdb.FlushDB(context.Background())
+
+	t.Run("With specified domain and slug", func(t *testing.T) {
+		cfg := &config.Config{
+			Public: &config.AppConfig{
+				Enabled:        true,
+				AllowedDomains: []string{"localhost"},
+			},
+		}
+		res, err := callCreateHandler(cfg, "", `{"domain": "localhost", "slug": "hello", "original_url": "http://google.com", "ttl": 23}`)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusCreated, res.Status)
+		assert.Equal(
+			t,
+			`{"slug":"hello","domain":"localhost","original_url":"http://google.com","ttl":23}`,
+			strings.TrimSpace(res.Body),
+		)
+
+		rdbRes := rdb.Get(context.Background(), "link:localhost/hello")
+		assert.Equal(t, "http://google.com", rdbRes.Val())
+	})
+
+	t.Run("With specified domain and random slug", func(t *testing.T) {
+		cfg := &config.Config{
+			Public: &config.AppConfig{
+				Enabled:        true,
+				AllowedDomains: []string{"localhost"},
+			},
+		}
+		res, err := callCreateHandler(cfg, "", `{"domain": "localhost", "original_url": "http://google.com", "ttl": 23}`)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusCreated, res.Status)
+
+		var link models.Link
+		err = json.Unmarshal([]byte(res.Body), &link)
+		assert.NoError(t, err)
+
+		assert.Equal(t, "localhost", link.Domain)
+		assert.Equal(t, "http://google.com", link.OriginalURL)
+		assert.Equal(t, 23, link.TTL)
+		assert.NotEmpty(t, link.Slug)
+
+		slug := link.Slug
+
+		rdbRes := rdb.Get(context.Background(), "link:localhost/"+slug)
+		assert.Equal(t, "http://google.com", rdbRes.Val())
+	})
+
+	t.Run("With random slug and no domain", func(t *testing.T) {
+		cfg := &config.Config{
+			Public: &config.AppConfig{
+				Enabled:        true,
+				AllowedDomains: []string{"localhost"},
+			},
+		}
+		res, err := callCreateHandler(cfg, "", `{"original_url": "http://google.com", "ttl": 23}`)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusCreated, res.Status)
+
+		var link models.Link
+		err = json.Unmarshal([]byte(res.Body), &link)
+		assert.NoError(t, err)
+
+		assert.Equal(t, "localhost", link.Domain)
+		assert.Equal(t, "http://google.com", link.OriginalURL)
+		assert.Equal(t, 23, link.TTL)
+		assert.NotEmpty(t, link.Slug)
+
+		slug := link.Slug
+
+		rdbRes := rdb.Get(context.Background(), "link:localhost/"+slug)
+		assert.Equal(t, "http://google.com", rdbRes.Val())
+	})
+
+	t.Run("With slug and domain pair already in use", func(t *testing.T) {
+		cfg := &config.Config{
+			Public: &config.AppConfig{
+				Enabled:        true,
+				AllowedDomains: []string{"localhost"},
+			},
+		}
+		res, err := callCreateHandler(cfg, "", `{"domain":"localhost", "slug": "flamengo", "original_url": "http://google.com", "ttl": 23}`)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusCreated, res.Status)
+
+		res, err = callCreateHandler(cfg, "", `{"domain":"localhost", "slug": "flamengo", "original_url": "http://bing.com", "ttl": 23}`)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusConflict, res.Status)
+		assert.Equal(
+			t,
+			`{"detail":{"message":"Link already exists"},"error":"CONFLICT"}`,
+			strings.TrimSpace(res.Body),
+		)
+
+		rdbRes := rdb.Get(context.Background(), "link:localhost/flamengo")
+		assert.Equal(t, "http://google.com", rdbRes.Val())
 	})
 }

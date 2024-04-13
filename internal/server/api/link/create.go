@@ -98,7 +98,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	link := models.Link{
 		Slug:   slug,
 		Domain: domain,
-		URL:    body.OriginalURL,
+		OriginalURL:    body.OriginalURL,
 		TTL:    ttlInSecs,
 	}
 

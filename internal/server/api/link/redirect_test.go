@@ -28,6 +28,7 @@ func callRedirectHandler(cfg *config.Config, domain, slug string) (*mocker.Respo
 }
 
 func TestRedirect(t *testing.T) {
+	rdb.FlushDB(context.Background())
 	rdb.SetNX(context.Background(), "link:localhost/hello", "http://example.com", 30*time.Second)
 	rdb.SetNX(context.Background(), "link:127.0.0.1/world", "http://example.com/world", 30*time.Second)
 
@@ -71,4 +72,6 @@ func TestRdbIsClosed(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, res.Status)
 		assert.Equal(t, `{"detail":{"message":"Something went wrong"},"error":"INTERNAL_SERVER_ERROR"}`, strings.TrimSpace(res.Body))
 	})
+
+	rdb = mocker.MakeRedictMock()
 }
