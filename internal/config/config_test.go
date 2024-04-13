@@ -22,31 +22,31 @@ var (
 func TestInvalidConfigPath(t *testing.T) {
 	cfg, err := config.LoadConfigFromFile("invalid")
 	assert.Nil(t, cfg)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 }
 
 func TestLoadInvalidYamlData(t *testing.T) {
 	cfg, err := config.LoadConfigFromData([]byte("x=x+1"))
 	assert.Nil(t, cfg)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 }
 
 func TestLoadConfig(t *testing.T) {
 	cfg, err := config.LoadConfigFromData([]byte("x=x+1"))
 	assert.Nil(t, cfg)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 }
 
 func TestLoadConfigWithPublicAPIKey(t *testing.T) {
 	// public with api key? nem a pau, juvenal
 	cfg, err := config.LoadConfigFromData([]byte("public: { apiKey: true }"))
 	assert.Nil(t, cfg)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 }
 
 func TestLoadDefaultConfig(t *testing.T) {
 	cfg, err := config.LoadConfigFromFile(defaultConfigPath)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, cfg)
 
 	mustHaveNoZeroValue(t, cfg)
