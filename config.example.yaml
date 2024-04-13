@@ -21,32 +21,16 @@ redict:
 public:
   # allow public usage?
   enabled: true
-  # TODO: how many links per ip per hour
-  limitPerIPPerHour: 5
-  # TODO: allow custom "url"
-  allowCustomSlug: false
-  # TODO: a list of the domains it may use
+  # a list of the domains it may use
   allowedDomains:
     - localhost:42069
-  # TODO: min url duration in seconds, use -1 for no limit
-  minDurationSec: 10
-  # TODO: max url duration in seconds, use -1 for no limit
-  maxDurationSec: 86400
 
 apps:
   testing:
+    # enable this app?
+    enabled: true
     # api key used by the app
     apiKey: 8140e244-0f44-42e1-a7b2-295e53e2b334
-    # enable this app?
-    enabled: false
-    # how many links per ip per hour, -1 for no limit
-    limitPerIPPerHour: -1
-    # allow custom "url"
-    allowCustomSlug: true
     # a list of the domains it may use
     allowedDomains:
       - localhost:42069
-    # min url duration in seconds, use -1 for no limit
-    minDurationSec: -1
-    # max url duration in seconds, use -1 for no limit
-    maxDurationSec: -1
