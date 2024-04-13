@@ -9,6 +9,7 @@ import (
 
 	"github.com/pauloo27/shurl/internal/config"
 	"github.com/pauloo27/shurl/internal/ctx"
+	"github.com/redis/go-redis/v9"
 )
 
 type Response struct {
@@ -24,6 +25,7 @@ type RequestData struct {
 
 	// not request, per se, but needed for the handler
 	Config *config.Config
+	Rdb    *redis.Client
 }
 
 func CallHandler(handler http.HandlerFunc, data RequestData) (*Response, error) {
@@ -32,7 +34,7 @@ func CallHandler(handler http.HandlerFunc, data RequestData) (*Response, error) 
 	r.Header = data.Headers
 
 	cfg := MakeConfigMock(data.Config)
-	rdb := MakeRedictMock()
+	rdb := data.Rdb
 
 	services := &ctx.Services{
 		Config: cfg,

@@ -69,7 +69,11 @@ func TestValidateBody(t *testing.T) {
 	})
 }
 
-func callHandler(config *config.Config, apiKey, body string) (*mocker.Response, error) {
+var (
+	rdb = mocker.MakeRedictMock()
+)
+
+func callCreateHandler(cfg *config.Config, apiKey, body string) (*mocker.Response, error) {
 	headers := make(http.Header)
 	headers.Set("X-API-Key", apiKey)
 
@@ -78,7 +82,8 @@ func callHandler(config *config.Config, apiKey, body string) (*mocker.Response, 
 		Headers: headers,
 		Path:    "/api/link",
 		Method:  "POST",
-		Config:  config,
+		Config:  cfg,
+		Rdb:     rdb,
 	}
 	return mocker.CallHandler(link.Create, data)
 }
@@ -94,7 +99,7 @@ func TestAuthorization(t *testing.T) {
 				Enabled: false,
 			},
 		}
-		res, err := callHandler(config, "", `{"original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(config, "", `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusUnauthorized, res.Status)
@@ -119,7 +124,7 @@ func TestAuthorization(t *testing.T) {
 				"my-app": app,
 			},
 		}
-		res, err := callHandler(config, "wrong-api-key", `{"original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(config, "wrong-api-key", `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusUnauthorized, res.Status)
@@ -144,7 +149,7 @@ func TestAuthorization(t *testing.T) {
 				"my-app": app,
 			},
 		}
-		res, err := callHandler(config, secretApiKey, `{"original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(config, secretApiKey, `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusUnauthorized, res.Status)
@@ -162,7 +167,7 @@ func TestAuthorization(t *testing.T) {
 				AllowedDomains: []string{"localhost"},
 			},
 		}
-		res, err := callHandler(config, "", `{"original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(config, "", `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.Status)
@@ -183,7 +188,7 @@ func TestAuthorization(t *testing.T) {
 				"my-app": app,
 			},
 		}
-		res, err := callHandler(config, secretApiKey, `{"original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(config, secretApiKey, `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.Status)
@@ -204,7 +209,7 @@ func TestAuthorization(t *testing.T) {
 				"my-app": app,
 			},
 		}
-		res, err := callHandler(config, secretApiKey, `{"domain": "google.com", "original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(config, secretApiKey, `{"domain": "google.com", "original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusForbidden, res.Status)
