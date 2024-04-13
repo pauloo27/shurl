@@ -13,14 +13,14 @@ http:
 redict:
   # redict address with port
   address: 'localhost:6379'
-  # redict password (if any)
-  password: ''
+  # redict password
+  password: 'password'
   # redict db, whatever that means
-  db: 0
+  db: 7
 
 public:
   # allow public usage?
-  enabled: false
+  enabled: true
   # TODO: how many links per ip per hour
   limitPerIPPerHour: 5
   # TODO: allow custom "url"
@@ -38,7 +38,7 @@ apps:
     # api key used by the app
     apiKey: 8140e244-0f44-42e1-a7b2-295e53e2b334
     # enable this app?
-    enabled: true
+    enabled: false
     # how many links per ip per hour, -1 for no limit
     limitPerIPPerHour: -1
     # allow custom "url"

@@ -1,4 +1,5 @@
 BINARY_NAME = shurl
+TEST_COMMAND = go test -v
 
 .PHONY: build
 build:
