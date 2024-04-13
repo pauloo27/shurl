@@ -54,7 +54,7 @@ func TestLoggerMiddleware(t *testing.T) {
 	}
 
 	for i, line := range lines {
-		var record map[string]interface{}
+		var record map[string]any
 		err := json.Unmarshal([]byte(line), &record)
 		require.NoError(t, err)
 		fmt.Println(line)
