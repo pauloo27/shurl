@@ -16,8 +16,8 @@ import (
 )
 
 type CreateLinkBody struct {
-	Slug        string `json:"slug,omitempty" validate:"omitempty,min=3,max=20"`
-	Domain      string `json:"domain,omitempty" validate:"omitempty"`
+	Slug        string `json:"slug" validate:"omitempty,min=3,max=20"`
+	Domain      string `json:"domain" validate:"omitempty,min=1"`
 	OriginalURL string `json:"original_url" validate:"required,http_url"`
 	TTL         *int   `json:"ttl" validate:"required"`
 }
