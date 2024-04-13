@@ -15,16 +15,16 @@ import (
 	"github.com/pauloo27/shurl/internal/server/validator"
 )
 
+const (
+	DefaultSlugLength = 8
+)
+
 type CreateLinkBody struct {
 	Slug        string `json:"slug" validate:"omitempty,min=3,max=20"`
 	Domain      string `json:"domain" validate:"omitempty,min=1"`
 	OriginalURL string `json:"original_url" validate:"required,http_url"`
 	TTL         *int   `json:"ttl" validate:"required"`
 }
-
-const (
-	DefaultSlugLength = 8
-)
 
 func Create(w http.ResponseWriter, r *http.Request) {
 	body, ok := validator.MustGetBody[CreateLinkBody](w, r)
@@ -65,6 +65,11 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	domain := body.Domain
 	if domain == "" {
+		if len(app.AllowedDomains) == 0 {
+			api.Err(w, http.StatusForbidden, api.ForbiddenErr, "No allowed domains for this app")
+			slog.Info("Missing allowed domains for app", "apiKey", app.APIKey)
+			return
+		}
 		slog.Info("Domain not provided, using the first allowed domain from app", "domain", domain)
 		domain = app.AllowedDomains[0]
 	} else {
