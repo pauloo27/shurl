@@ -69,10 +69,6 @@ func TestValidateBody(t *testing.T) {
 	})
 }
 
-var (
-	rdb = mocker.MakeRedictMock()
-)
-
 func callCreateHandler(cfg *config.Config, apiKey, body string) (*mocker.Response, error) {
 	headers := make(http.Header)
 	headers.Set("X-API-Key", apiKey)
@@ -82,7 +78,7 @@ func callCreateHandler(cfg *config.Config, apiKey, body string) (*mocker.Respons
 		Headers: headers,
 		Path:    "/api/link",
 		Method:  "POST",
-		Config:  cfg,
+		Config:  mocker.MakeConfigMock(cfg),
 		Rdb:     rdb,
 	}
 	return mocker.CallHandler(link.Create, data)

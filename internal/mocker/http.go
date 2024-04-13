@@ -7,21 +7,25 @@ import (
 	"net/http/httptest"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/pauloo27/shurl/internal/config"
 	"github.com/pauloo27/shurl/internal/ctx"
 	"github.com/redis/go-redis/v9"
 )
 
 type Response struct {
-	Status int
-	Body   string
+	Status  int
+	Body    string
+	Headers http.Header
 }
 
 type RequestData struct {
-	Path    string
-	Method  string
-	Body    string
-	Headers http.Header
+	Host      string
+	Path      string
+	Method    string
+	Body      string
+	Headers   http.Header
+	URLParams map[string]string
 
 	// not request, per se, but needed for the handler
 	Config *config.Config
@@ -32,16 +36,21 @@ func CallHandler(handler http.HandlerFunc, data RequestData) (*Response, error) 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(data.Method, data.Path, strings.NewReader(data.Body))
 	r.Header = data.Headers
-
-	cfg := MakeConfigMock(data.Config)
-	rdb := data.Rdb
+	r.Host = data.Host
 
 	services := &ctx.Services{
-		Config: cfg,
-		Rdb:    rdb,
+		Config: data.Config,
+		Rdb:    data.Rdb,
 	}
 
 	r = r.WithContext(context.WithValue(r.Context(), ctx.ServicesKey, services))
+	chiCtx := chi.NewRouteContext()
+
+	for k, v := range data.URLParams {
+		chiCtx.URLParams.Add(k, v)
+	}
+
+	r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, chiCtx))
 
 	handler(w, r)
 
@@ -51,8 +60,9 @@ func CallHandler(handler http.HandlerFunc, data RequestData) (*Response, error) 
 	}
 
 	res := Response{
-		Status: w.Result().StatusCode,
-		Body:   string(rawBody),
+		Status:  w.Result().StatusCode,
+		Body:    string(rawBody),
+		Headers: w.Result().Header,
 	}
 
 	return &res, nil
