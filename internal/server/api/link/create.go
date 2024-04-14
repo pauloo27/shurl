@@ -42,6 +42,8 @@ type CreateLinkBody struct {
 //	@Description	If no slug is provided, a random one will be generated.
 //	@Description	If no domain is provided, the first allowed domain from the app will be used.
 //	@Description	The ttl is required. 0 means no expiration, otherwise it's the number of seconds until expiration.
+//	@Description	The ttl can't be greater than 1 year (31536000 seconds).
+//	@Description	The API Key may limit the allowed domains and the ttl.
 //	@Param			body	body	CreateLinkBody	true	"Domain and slug are optional"
 //	@Tags			link
 //	@Produce		json
@@ -54,7 +56,7 @@ type CreateLinkBody struct {
 //	@Failure		409	{object}	api.Error[map[string]string]	"Duplicated link"
 //	@Failure		422	{object}	api.Error[map[string]string]	"Validation error"
 //	@Security		ApiKeyAuth
-//	@Param			X-API-Key	header string	false "API Key, leave empty for public access (if enabled in the server)"
+//	@Param			X-API-Key	header	string	false	"API Key, leave empty for public access (if enabled in the server)"
 func Create(w http.ResponseWriter, r *http.Request) {
 	body, ok := validator.MustGetBody[CreateLinkBody](w, r)
 	if !ok {

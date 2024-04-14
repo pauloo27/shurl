@@ -52,7 +52,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Create a link from a slug to the original URL.\nIf no slug is provided, a random one will be generated.\nIf no domain is provided, the first allowed domain from the app will be used.\nThe ttl is required. 0 means no expiration, otherwise it's the number of seconds until expiration.",
+                "description": "Create a link from a slug to the original URL.\nIf no slug is provided, a random one will be generated.\nIf no domain is provided, the first allowed domain from the app will be used.\nThe ttl is required. 0 means no expiration, otherwise it's the number of seconds until expiration.\nThe ttl can't be greater than 1 year (31536000 seconds).\nThe API Key may limit the allowed domains and the ttl.",
                 "produces": [
                     "application/json"
                 ],
@@ -183,8 +183,7 @@ const docTemplate = `{
         "link.CreateLinkBody": {
             "type": "object",
             "required": [
-                "original_url",
-                "ttl"
+                "original_url"
             ],
             "properties": {
                 "domain": {
@@ -200,7 +199,9 @@ const docTemplate = `{
                     "minLength": 3
                 },
                 "ttl": {
-                    "type": "integer"
+                    "type": "integer",
+                    "maximum": 31536000,
+                    "minimum": 0
                 }
             }
         },
