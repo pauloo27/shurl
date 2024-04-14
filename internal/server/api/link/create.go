@@ -25,7 +25,7 @@ var (
 )
 
 const (
-	DefaultSlugLength = 8
+	DefaultSlugLength = 6
 )
 
 type CreateLinkBody struct {
