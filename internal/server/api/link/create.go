@@ -146,6 +146,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		Domain:      domain,
 		OriginalURL: body.OriginalURL,
 		TTL:         ttlInSecs,
+		URL:         fmt.Sprintf("https://%s/%s", domain, slug),
 	}
 
 	key := fmt.Sprintf("link:%s/%s", domain, slug)
