@@ -36,7 +36,7 @@ func Health(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !ok {
-		api.DetailedError(w, http.StatusInternalServerError, api.InternalServerErr, status)
+		api.DetailedError(w, api.InternalServerErr, status)
 		return
 	}
 

@@ -104,7 +104,7 @@ func TestAuthorization(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, res.Status)
 		assert.Equal(
 			t,
-			`{"detail":{"message":"Invalid API key"},"error":"UNAUTHORIZED"}`,
+			`{"error":"UNAUTHORIZED","detail":{"message":"Invalid API key"}}`,
 			strings.TrimSpace(res.Body),
 		)
 	})
@@ -121,7 +121,7 @@ func TestAuthorization(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, res.Status)
 		assert.Equal(
 			t,
-			`{"detail":{"message":"No allowed domains for this app"},"error":"FORBIDDEN"}`,
+			`{"error":"FORBIDDEN","detail":{"message":"No allowed domains for this app"}}`,
 			strings.TrimSpace(res.Body),
 		)
 	})
@@ -146,7 +146,7 @@ func TestAuthorization(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, res.Status)
 		assert.Equal(
 			t,
-			`{"detail":{"message":"Invalid API key"},"error":"UNAUTHORIZED"}`,
+			`{"error":"UNAUTHORIZED","detail":{"message":"Invalid API key"}}`,
 			strings.TrimSpace(res.Body),
 		)
 	})
@@ -171,7 +171,7 @@ func TestAuthorization(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, res.Status)
 		assert.Equal(
 			t,
-			`{"detail":{"message":"Invalid API key"},"error":"UNAUTHORIZED"}`,
+			`{"error":"UNAUTHORIZED","detail":{"message":"Invalid API key"}}`,
 			strings.TrimSpace(res.Body),
 		)
 	})
@@ -231,7 +231,7 @@ func TestAuthorization(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, res.Status)
 		assert.Equal(
 			t,
-			`{"detail":{"message":"Domain not allowed for this app"},"error":"FORBIDDEN"}`,
+			`{"error":"FORBIDDEN","detail":{"message":"Domain not allowed for this app"}}`,
 			strings.TrimSpace(res.Body),
 		)
 	})
@@ -246,7 +246,7 @@ func TestInvalidData(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, res.Status)
 		assert.Equal(
 			t,
-			`{"detail":{"message":"unexpected EOF"},"error":"BAD_REQUEST"}`,
+			`{"error":"BAD_REQUEST","detail":{"message":"unexpected EOF"}}`,
 			strings.TrimSpace(res.Body),
 		)
 	})
@@ -259,7 +259,7 @@ func TestInvalidData(t *testing.T) {
 		assert.Equal(t, http.StatusUnprocessableEntity, res.Status)
 		assert.Equal(
 			t,
-			`{"detail":[{"field":"ttl","error":"required"}],"error":"VALIDATION_ERROR"}`,
+			`{"error":"VALIDATION_ERROR","detail":[{"field":"ttl","error":"required"}]}`,
 			strings.TrimSpace(res.Body),
 		)
 	})
@@ -281,7 +281,7 @@ func TestInvalidData(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, res.Status)
 		assert.Equal(
 			t,
-			`{"detail":{"message":"Something went wrong"},"error":"INTERNAL_SERVER_ERROR"}`,
+			`{"error":"INTERNAL_SERVER_ERROR","detail":{"message":"Something went wrong"}}`,
 			strings.TrimSpace(res.Body),
 		)
 
@@ -385,7 +385,7 @@ func TestCreation(t *testing.T) {
 		assert.Equal(t, http.StatusConflict, res.Status)
 		assert.Equal(
 			t,
-			`{"detail":{"message":"Link already exists"},"error":"CONFLICT"}`,
+			`{"error":"CONFLICT","detail":{"message":"Link already exists"}}`,
 			strings.TrimSpace(res.Body),
 		)
 
@@ -412,7 +412,7 @@ func TestBlacklistedSlugs(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, res.Status)
 		assert.Equal(
 			t,
-			`{"detail":{"message":"Slug is blacklisted"},"error":"FORBIDDEN"}`,
+			`{"error":"FORBIDDEN","detail":{"message":"Slug is blacklisted"}}`,
 			strings.TrimSpace(res.Body),
 		)
 	}

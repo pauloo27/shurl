@@ -63,7 +63,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		randomSlug, err := gonanoid.New(DefaultSlugLength)
 		if err != nil {
 			slog.Error("Failed to generate random slug", "err", err)
-			api.Err(w, http.StatusInternalServerError, api.InternalServerErr, "Something went wrong")
+			api.Err(w, api.InternalServerErr, "Something went wrong")
 			return
 		}
 		slug = randomSlug
@@ -71,7 +71,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if SlugBlacklist[slug] {
-		api.Err(w, http.StatusForbidden, api.ForbiddenErr, "Slug is blacklisted")
+		api.Err(w, api.ForbiddenErr, "Slug is blacklisted")
 		return
 	}
 
@@ -85,14 +85,14 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if app == nil || !app.Enabled {
-		api.Err(w, http.StatusUnauthorized, api.UnauthorizedErr, "Invalid API key")
+		api.Err(w, api.UnauthorizedErr, "Invalid API key")
 		return
 	}
 
 	domain := body.Domain
 	if domain == "" {
 		if len(app.AllowedDomains) == 0 {
-			api.Err(w, http.StatusForbidden, api.ForbiddenErr, "No allowed domains for this app")
+			api.Err(w, api.ForbiddenErr, "No allowed domains for this app")
 			slog.Info("Missing allowed domains for app", "apiKey", app.APIKey)
 			return
 		}
@@ -107,7 +107,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if !allowed {
-			api.Err(w, http.StatusForbidden, api.ForbiddenErr, "Domain not allowed for this app")
+			api.Err(w, api.ForbiddenErr, "Domain not allowed for this app")
 			return
 		}
 	}
@@ -132,13 +132,13 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	cmd := rdb.SetNX(context.Background(), key, body.OriginalURL, ttl)
 	if cmd.Err() != nil {
 		slog.Error("Failed to create link", "err", cmd.Err())
-		api.Err(w, http.StatusInternalServerError, api.InternalServerErr, "Something went wrong")
+		api.Err(w, api.InternalServerErr, "Something went wrong")
 		return
 	}
 
 	if !cmd.Val() {
 		slog.Error("Link already exists", "slug", slug)
-		api.Err(w, http.StatusConflict, api.ConflictErr, "Link already exists")
+		api.Err(w, api.ConflictErr, "Link already exists")
 		return
 	}
 

@@ -47,7 +47,7 @@ func TestRedirect(t *testing.T) {
 		res, err := callRedirectHandler(cfg, "localhost", "world")
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, res.Status)
-		assert.Equal(t, `{"detail":{"message":"Link not found"},"error":"NOT_FOUND"}`, strings.TrimSpace(res.Body))
+		assert.Equal(t, `{"error":"NOT_FOUND","detail":{"message":"Link not found"}}`, strings.TrimSpace(res.Body))
 	})
 
 	t.Run("Slug not found", func(t *testing.T) {
@@ -56,7 +56,7 @@ func TestRedirect(t *testing.T) {
 		res, err := callRedirectHandler(cfg, "localhost", "slug")
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, res.Status)
-		assert.Equal(t, `{"detail":{"message":"Link not found"},"error":"NOT_FOUND"}`, strings.TrimSpace(res.Body))
+		assert.Equal(t, `{"error":"NOT_FOUND","detail":{"message":"Link not found"}}`, strings.TrimSpace(res.Body))
 	})
 }
 
@@ -70,7 +70,7 @@ func TestRdbIsClosed(t *testing.T) {
 		res, err := callRedirectHandler(cfg, "localhost", "slug")
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusInternalServerError, res.Status)
-		assert.Equal(t, `{"detail":{"message":"Something went wrong"},"error":"INTERNAL_SERVER_ERROR"}`, strings.TrimSpace(res.Body))
+		assert.Equal(t, `{"error":"INTERNAL_SERVER_ERROR","detail":{"message":"Something went wrong"}}`, strings.TrimSpace(res.Body))
 	})
 
 	rdb = mocker.MakeRedictMock()

@@ -21,9 +21,9 @@ func MustGetBody[T any](w http.ResponseWriter, r *http.Request) (T, bool) {
 	if err != nil {
 		slog.Error("Failed to decode body", "err", err)
 		if errors.Is(err, io.EOF) {
-			api.Err(w, http.StatusBadRequest, api.BadRequestErr, "Missing body")
+			api.Err(w, api.BadRequestErr, "Missing body")
 		} else {
-			api.Err(w, http.StatusBadRequest, api.BadRequestErr, err.Error())
+			api.Err(w, api.BadRequestErr, err.Error())
 		}
 		return body, false
 	}
@@ -34,7 +34,7 @@ func MustGetBody[T any](w http.ResponseWriter, r *http.Request) (T, bool) {
 		return body, true
 	}
 
-	api.DetailedError(w, http.StatusUnprocessableEntity, api.ValidationErr, validationErrors)
+	api.DetailedError(w, api.ValidationErr, validationErrors)
 
 	return body, false
 }

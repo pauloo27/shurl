@@ -26,11 +26,11 @@ func Redirect(w http.ResponseWriter, r *http.Request) {
 	if err := res.Err(); err != nil {
 		if errors.Is(err, redis.Nil) {
 			slog.Warn("Link not found", "domain", domain, "slug", slug)
-			api.Err(w, http.StatusNotFound, api.NotFoundErr, "Link not found")
+			api.Err(w, api.NotFoundErr, "Link not found")
 			return
 		}
 		slog.Error("Failed to get link", "slug", slug, "err", err)
-		api.Err(w, http.StatusInternalServerError, api.InternalServerErr, "Something went wrong")
+		api.Err(w, api.InternalServerErr, "Something went wrong")
 		return
 	}
 

@@ -13,14 +13,14 @@ import (
 func TestErr(t *testing.T) {
 	rr := httptest.NewRecorder()
 
-	api.Err(rr, http.StatusNotFound, api.NotFoundErr, "Resource not found")
+	api.Err(rr, api.NotFoundErr, "Resource not found")
 	assert.Equal(t, http.StatusNotFound, rr.Code)
 
 	var responseBody map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&responseBody)
 	assert.NoError(t, err)
 
-	assert.Equal(t, string(api.NotFoundErr), responseBody["error"])
+	assert.Equal(t, string(api.NotFoundErr.Name), responseBody["error"])
 	errorDetailMessage := responseBody["detail"].(map[string]interface{})["message"]
 	assert.Equal(t, "Resource not found", errorDetailMessage)
 }
