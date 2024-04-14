@@ -225,6 +225,9 @@ const docTemplate = `{
                 },
                 "ttl": {
                     "type": "integer"
+                },
+                "url": {
+                    "type": "string"
                 }
             }
         }
