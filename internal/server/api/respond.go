@@ -17,6 +17,12 @@ const (
 	UnauthorizedErr   ErrorType = "UNAUTHORIZED"
 )
 
+func Ok[T any](w http.ResponseWriter, detail T) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(detail)
+}
+
 func Created[T any](w http.ResponseWriter, detail T) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
