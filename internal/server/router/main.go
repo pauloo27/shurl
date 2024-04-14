@@ -4,8 +4,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/pauloo27/shurl/internal/server/api/health"
 	"github.com/pauloo27/shurl/internal/server/api/link"
-	_ "github.com/pauloo27/shurl/internal/server/docs"
 	"github.com/swaggo/http-swagger/v2"
+	// swagger :)
+	_ "github.com/pauloo27/shurl/internal/server/docs"
 )
 
 func RouteApp(root *chi.Mux) {
