@@ -25,9 +25,11 @@ func LoadConfigFromData(data []byte) (*Config, error) {
 		return nil, err
 	}
 
+	ensureNotNil(&config)
+
 	config.AppByAPIKey = make(map[string]*AppConfig)
 
-	if config.Public != nil && config.Public.APIKey != "" {
+	if config.Public.APIKey != "" {
 		return nil, errors.New("public client must not have api key")
 	}
 
@@ -36,4 +38,22 @@ func LoadConfigFromData(data []byte) (*Config, error) {
 	}
 
 	return &config, nil
+}
+
+func ensureNotNil(cfg *Config) {
+	if cfg.Log == nil {
+		cfg.Log = &LogConfig{}
+	}
+	if cfg.HTTP == nil {
+		cfg.HTTP = &HTTPConfig{}
+	}
+	if cfg.Redict == nil {
+		cfg.Redict = &RedictConfig{}
+	}
+	if cfg.Public == nil {
+		cfg.Public = &AppConfig{}
+	}
+	if cfg.Apps == nil {
+		cfg.Apps = make(map[string]*AppConfig)
+	}
 }

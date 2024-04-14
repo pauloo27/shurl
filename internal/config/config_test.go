@@ -37,6 +37,13 @@ func TestLoadConfig(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestLoadEmptyConfig(t *testing.T) {
+	cfg, err := config.LoadConfigFromData([]byte(""))
+	assert.NotNil(t, cfg)
+	assert.NoError(t, err)
+	mustHaveNoNilPointers(t, *cfg)
+}
+
 func TestLoadConfigWithPublicAPIKey(t *testing.T) {
 	// public with api key? nem a pau, juvenal
 	cfg, err := config.LoadConfigFromData([]byte("public: { apiKey: true }"))
@@ -50,6 +57,24 @@ func TestLoadDefaultConfig(t *testing.T) {
 	assert.NotNil(t, cfg)
 
 	mustHaveNoZeroValue(t, cfg)
+}
+
+func mustHaveNoNilPointers(t *testing.T, cfg config.Config) {
+	valType := reflect.TypeOf(cfg)
+	valVal := reflect.ValueOf(cfg)
+
+	for i := 0; i < valType.NumField(); i++ {
+		field := valType.Field(i)
+
+		// skip fields ignored by yaml
+		yamlTag := field.Tag.Get("yaml")
+		if yamlTag == "-" {
+			continue
+		}
+
+		fieldVal := valVal.Field(i).Interface()
+		assert.NotNil(t, fieldVal, "Field %s must not be nil", field.Name)
+	}
 }
 
 func mustHaveNoZeroValue(t *testing.T, cfg *config.Config) {
