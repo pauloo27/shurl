@@ -32,7 +32,7 @@ type CreateLinkBody struct {
 	Slug        string `json:"slug" validate:"omitempty,min=3,max=20,excludes=/"`
 	Domain      string `json:"domain" validate:"omitempty,min=1"`
 	OriginalURL string `json:"original_url" validate:"required,http_url"`
-	TTL         *int   `json:"ttl" validate:"required"`
+	TTL         *int   `json:"ttl" validate:"min=0,max=31536000"`
 }
 
 // Create godoc

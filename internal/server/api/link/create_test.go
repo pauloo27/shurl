@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/pauloo27/shurl/internal/config"
 	"github.com/pauloo27/shurl/internal/mocker"
@@ -259,7 +260,25 @@ func TestInvalidData(t *testing.T) {
 		assert.Equal(t, http.StatusUnprocessableEntity, res.Status)
 		assert.Equal(
 			t,
-			`{"error":"VALIDATION_ERROR","detail":[{"field":"ttl","error":"required"}]}`,
+			`{"error":"VALIDATION_ERROR","detail":[{"field":"ttl","error":"min 0"}]}`,
+			strings.TrimSpace(res.Body),
+		)
+	})
+
+	t.Run("With negative ttl", func(t *testing.T) {
+		cfg := &config.Config{
+			Public: &config.AppConfig{
+				Enabled:        true,
+				AllowedDomains: []string{"localhost"},
+			},
+		}
+		res, err := callCreateHandler(cfg, "", `{"ttl": -1, "original_url": "https://google.com"}`)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusUnprocessableEntity, res.Status)
+		assert.Equal(
+			t,
+			`{"error":"VALIDATION_ERROR","detail":[{"field":"ttl","error":"min 0"}]}`,
 			strings.TrimSpace(res.Body),
 		)
 	})
@@ -291,14 +310,14 @@ func TestInvalidData(t *testing.T) {
 
 func TestCreation(t *testing.T) {
 	rdb.FlushDB(context.Background())
+	cfg := &config.Config{
+		Public: &config.AppConfig{
+			Enabled:        true,
+			AllowedDomains: []string{"localhost"},
+		},
+	}
 
 	t.Run("With specified domain and slug", func(t *testing.T) {
-		cfg := &config.Config{
-			Public: &config.AppConfig{
-				Enabled:        true,
-				AllowedDomains: []string{"localhost"},
-			},
-		}
 		res, err := callCreateHandler(cfg, "", `{"domain": "localhost", "slug": "hello", "original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
@@ -314,12 +333,6 @@ func TestCreation(t *testing.T) {
 	})
 
 	t.Run("With specified domain and random slug", func(t *testing.T) {
-		cfg := &config.Config{
-			Public: &config.AppConfig{
-				Enabled:        true,
-				AllowedDomains: []string{"localhost"},
-			},
-		}
 		res, err := callCreateHandler(cfg, "", `{"domain": "localhost", "original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
@@ -341,12 +354,6 @@ func TestCreation(t *testing.T) {
 	})
 
 	t.Run("With random slug and no domain", func(t *testing.T) {
-		cfg := &config.Config{
-			Public: &config.AppConfig{
-				Enabled:        true,
-				AllowedDomains: []string{"localhost"},
-			},
-		}
 		res, err := callCreateHandler(cfg, "", `{"original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
@@ -368,12 +375,6 @@ func TestCreation(t *testing.T) {
 	})
 
 	t.Run("With slug and domain pair already in use", func(t *testing.T) {
-		cfg := &config.Config{
-			Public: &config.AppConfig{
-				Enabled:        true,
-				AllowedDomains: []string{"localhost"},
-			},
-		}
 		res, err := callCreateHandler(cfg, "", `{"domain":"localhost", "slug": "flamengo", "original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
@@ -391,6 +392,28 @@ func TestCreation(t *testing.T) {
 
 		rdbRes := rdb.Get(context.Background(), "link:localhost/flamengo")
 		assert.Equal(t, "http://google.com", rdbRes.Val())
+	})
+
+	t.Run("Check TTL", func(t *testing.T) {
+		res, err := callCreateHandler(cfg, "", `{"slug": "short", "domain": "localhost", "original_url": "http://google.com", "ttl": 23}`)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusCreated, res.Status)
+
+		rdbRes, err := rdb.TTL(context.Background(), "link:localhost/short").Result()
+		assert.NoError(t, err)
+		assert.Equal(t, time.Duration(23)*time.Second, rdbRes)
+	})
+
+	t.Run("As not expiring link", func(t *testing.T) {
+		res, err := callCreateHandler(cfg, "", `{"slug": "final", "domain": "localhost", "original_url": "http://google.com", "ttl": 0}`)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusCreated, res.Status)
+
+		rdbRes, err := rdb.TTL(context.Background(), "link:localhost/final").Result()
+		assert.NoError(t, err)
+		assert.Equal(t, time.Duration(-1), rdbRes)
 	})
 }
 
