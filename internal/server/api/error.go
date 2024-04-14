@@ -18,6 +18,6 @@ var (
 )
 
 type Error[T any] struct {
-	Error  string `json:"error"`
-	Detail any    `json:"detail"`
+	Error  string `json:"error" example:"NOT_FOUND"`
+	Detail T      `json:"detail"`
 }

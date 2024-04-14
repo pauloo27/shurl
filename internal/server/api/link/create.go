@@ -46,7 +46,15 @@ type CreateLinkBody struct {
 //	@Tags			link
 //	@Produce		json
 //	@Router			/links [post]
-//	@Success		201	{object}	models.Link
+//	@Success		201	{object}	models.Link						"Created"
+//	@Failure		400	{object}	api.Error[map[string]string]	"Bad request"
+//	@Failure		500	{object}	api.Error[map[string]string]	"Internal server error"
+//	@Failure		401	{object}	api.Error[map[string]string]	"Missing API Key"
+//	@Failure		403	{object}	api.Error[map[string]string]	"Invalid API Key"
+//	@Failure		409	{object}	api.Error[map[string]string]	"Duplicated link"
+//	@Failure		422	{object}	api.Error[map[string]string]	"Validation error"
+//	@Security		ApiKeyAuth
+//	@Param			X-API-Key	header string	false "API Key, leave empty for public access (if enabled in the server)"
 func Create(w http.ResponseWriter, r *http.Request) {
 	body, ok := validator.MustGetBody[CreateLinkBody](w, r)
 	if !ok {
