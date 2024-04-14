@@ -115,6 +115,41 @@
                     }
                 }
             }
+        },
+        "/{slug}": {
+            "get": {
+                "description": "Redirect from domain/slug to the original URL",
+                "tags": [
+                    "link"
+                ],
+                "summary": "Redirect to the original URL",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Slug to redirect from",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "307": {
+                        "description": "Temporary Redirect"
+                    },
+                    "404": {
+                        "description": "Link not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error-map_string_string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error-map_string_string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

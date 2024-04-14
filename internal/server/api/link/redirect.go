@@ -12,6 +12,16 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// Redirect godoc
+//
+//	@Summary		Redirect to the original URL
+//	@Description	Redirect from domain/slug to the original URL
+//	@Tags			link
+//	@Param			slug	path	string	true	"Slug to redirect from"
+//	@Success		307
+//	@Failure		404	{object}	api.Error[map[string]string]	"Link not found"
+//	@Failure		500	{object}	api.Error[map[string]string]	"Internal server error"
+//	@Router			/{slug} [get]
 func Redirect(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
 	rdb := ctx.GetServices(c).Rdb

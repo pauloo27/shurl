@@ -19,7 +19,7 @@ type HealthStatus struct {
 //	@Tags			health
 //	@Produce		json
 //	@Success		200	{object}	HealthStatus
-//	@Success		500	{object}	HealthStatus
+//	@Failure		500	{object}	HealthStatus
 //	@Router			/healthz [get]
 func Health(w http.ResponseWriter, r *http.Request) {
 	services := ctx.GetServices(r.Context())
