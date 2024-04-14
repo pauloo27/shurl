@@ -278,7 +278,7 @@ func TestCreation(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, res.Status)
 		assert.Equal(
 			t,
-			`{"slug":"hello","domain":"localhost","original_url":"http://google.com","ttl":23}`,
+			`{"slug":"hello","domain":"localhost","original_url":"http://google.com","url":"https://localhost/hello","ttl":23}`,
 			strings.TrimSpace(res.Body),
 		)
 
@@ -298,8 +298,9 @@ func TestCreation(t *testing.T) {
 
 		assert.Equal(t, "localhost", link.Domain)
 		assert.Equal(t, "http://google.com", link.OriginalURL)
-		assert.Equal(t, 23, link.TTL)
 		assert.NotEmpty(t, link.Slug)
+		assert.Equal(t, "https://localhost/"+link.Slug, link.URL)
+		assert.Equal(t, 23, link.TTL)
 
 		slug := link.Slug
 
@@ -319,8 +320,9 @@ func TestCreation(t *testing.T) {
 
 		assert.Equal(t, "localhost", link.Domain)
 		assert.Equal(t, "http://google.com", link.OriginalURL)
-		assert.Equal(t, 23, link.TTL)
 		assert.NotEmpty(t, link.Slug)
+		assert.Equal(t, "https://localhost/"+link.Slug, link.URL)
+		assert.Equal(t, 23, link.TTL)
 
 		slug := link.Slug
 
