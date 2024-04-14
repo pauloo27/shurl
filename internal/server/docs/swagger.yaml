@@ -5,6 +5,34 @@ definitions:
       rdb:
         type: boolean
     type: object
+  link.CreateLinkBody:
+    properties:
+      domain:
+        minLength: 1
+        type: string
+      original_url:
+        type: string
+      slug:
+        maxLength: 20
+        minLength: 3
+        type: string
+      ttl:
+        type: integer
+    required:
+    - original_url
+    - ttl
+    type: object
+  models.Link:
+    properties:
+      domain:
+        type: string
+      original_url:
+        type: string
+      slug:
+        type: string
+      ttl:
+        type: integer
+    type: object
 info:
   contact: {}
   description: URL Shortener API
@@ -30,5 +58,29 @@ paths:
             $ref: '#/definitions/health.HealthStatus'
       summary: Get health status
       tags:
-      - Health
+      - health
+  /links:
+    post:
+      description: |-
+        Create a link from a slug to the original URL.
+        If no slug is provided, a random one will be generated.
+        If no domain is provided, the first allowed domain from the app will be used.
+        The ttl is required. 0 means no expiration, otherwise it's the number of seconds until expiration.
+      parameters:
+      - description: Domain and slug are optional
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/link.CreateLinkBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Link'
+      summary: Create a link
+      tags:
+      - link
 swagger: "2.0"

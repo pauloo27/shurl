@@ -35,6 +35,18 @@ type CreateLinkBody struct {
 	TTL         *int   `json:"ttl" validate:"required"`
 }
 
+// Create godoc
+//
+//	@Summary		Create a link
+//	@Description	Create a link from a slug to the original URL.
+//	@Description	If no slug is provided, a random one will be generated.
+//	@Description	If no domain is provided, the first allowed domain from the app will be used.
+//	@Description	The ttl is required. 0 means no expiration, otherwise it's the number of seconds until expiration.
+//	@Param			body	body	CreateLinkBody	true	"Domain and slug are optional"
+//	@Tags			link
+//	@Produce		json
+//	@Router			/links [post]
+//	@Success		201	{object}	models.Link
 func Create(w http.ResponseWriter, r *http.Request) {
 	body, ok := validator.MustGetBody[CreateLinkBody](w, r)
 	if !ok {

@@ -26,7 +26,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Health"
+                    "health"
                 ],
                 "summary": "Get health status",
                 "responses": {
@@ -44,6 +44,37 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/links": {
+            "post": {
+                "description": "Create a link from a slug to the original URL.\nIf no slug is provided, a random one will be generated.\nIf no domain is provided, the first allowed domain from the app will be used.\nThe ttl is required. 0 means no expiration, otherwise it's the number of seconds until expiration.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "link"
+                ],
+                "summary": "Create a link",
+                "parameters": [
+                    {
+                        "description": "Domain and slug are optional",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/link.CreateLinkBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Link"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -52,6 +83,47 @@ const docTemplate = `{
             "properties": {
                 "rdb": {
                     "type": "boolean"
+                }
+            }
+        },
+        "link.CreateLinkBody": {
+            "type": "object",
+            "required": [
+                "original_url",
+                "ttl"
+            ],
+            "properties": {
+                "domain": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "original_url": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 3
+                },
+                "ttl": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Link": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "type": "string"
+                },
+                "original_url": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "ttl": {
+                    "type": "integer"
                 }
             }
         }

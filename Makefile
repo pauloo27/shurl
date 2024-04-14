@@ -51,7 +51,7 @@ gosec:
 .PHONY: swagger
 swagger:
 	swag fmt
-	swag init --dir ./internal/server/ --output ./internal/server/docs
+	swag init --dir ./internal/server/,./internal/models/ --output ./internal/server/docs
 
 .PHONY: inspect
 inspect: lint gosec staticcheck

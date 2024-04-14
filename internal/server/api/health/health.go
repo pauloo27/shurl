@@ -16,7 +16,7 @@ type HealthStatus struct {
 //
 //	@Summary		Get health status
 //	@Description	Get the health status of the service
-//	@Tags			Health
+//	@Tags			health
 //	@Produce		json
 //	@Success		200	{object}	HealthStatus
 //	@Success		500	{object}	HealthStatus
