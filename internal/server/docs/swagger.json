@@ -1,0 +1,52 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "URL Shortener API",
+        "title": "Shurl API",
+        "contact": {},
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0"
+    },
+    "basePath": "/api/v1",
+    "paths": {
+        "/healthz": {
+            "get": {
+                "description": "Get the health status of the service",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Get health status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/health.HealthStatus"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/health.HealthStatus"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "health.HealthStatus": {
+            "type": "object",
+            "properties": {
+                "rdb": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}

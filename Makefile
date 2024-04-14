@@ -48,6 +48,11 @@ staticcheck:
 gosec:
 	gosec -tests ./... 
 
+.PHONY: swagger
+swagger:
+	swag fmt
+	swag init --dir ./internal/server/ --output ./internal/server/docs
+
 .PHONY: inspect
 inspect: lint gosec staticcheck
 

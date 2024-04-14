@@ -12,6 +12,12 @@ import (
 	"github.com/pauloo27/shurl/internal/server/router"
 )
 
+// @title			Shurl API
+// @version		1.0
+// @description	URL Shortener API
+// @license.name	MIT
+// @license.url	https://opensource.org/licenses/MIT
+// @BasePath		/api/v1
 func StartServer(services *ctx.Services) error {
 	r := chi.NewRouter()
 
