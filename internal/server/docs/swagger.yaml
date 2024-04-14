@@ -1,5 +1,13 @@
 basePath: /api/v1
 definitions:
+  api.Error-map_string_string:
+    properties:
+      detail:
+        $ref: '#/definitions/map_string_string'
+      error:
+        example: NOT_FOUND
+        type: string
+    type: object
   health.HealthStatus:
     properties:
       rdb:
@@ -21,6 +29,10 @@ definitions:
     required:
     - original_url
     - ttl
+    type: object
+  map_string_string:
+    additionalProperties:
+      type: string
     type: object
   models.Link:
     properties:
@@ -73,6 +85,10 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/link.CreateLinkBody'
+      - description: API Key, leave empty for public access (if enabled in the server)
+        in: header
+        name: X-API-Key
+        type: string
       produces:
       - application/json
       responses:
@@ -80,6 +96,32 @@ paths:
           description: Created
           schema:
             $ref: '#/definitions/models.Link'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Error-map_string_string'
+        "401":
+          description: Missing API Key
+          schema:
+            $ref: '#/definitions/api.Error-map_string_string'
+        "403":
+          description: Invalid API Key
+          schema:
+            $ref: '#/definitions/api.Error-map_string_string'
+        "409":
+          description: Duplicated link
+          schema:
+            $ref: '#/definitions/api.Error-map_string_string'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/api.Error-map_string_string'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Error-map_string_string'
+      security:
+      - ApiKeyAuth: []
       summary: Create a link
       tags:
       - link

@@ -47,6 +47,11 @@ const docTemplate = `{
         },
         "/links": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create a link from a slug to the original URL.\nIf no slug is provided, a random one will be generated.\nIf no domain is provided, the first allowed domain from the app will be used.\nThe ttl is required. 0 means no expiration, otherwise it's the number of seconds until expiration.",
                 "produces": [
                     "application/json"
@@ -64,6 +69,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/link.CreateLinkBody"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "API Key, leave empty for public access (if enabled in the server)",
+                        "name": "X-API-Key",
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -72,12 +83,60 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/models.Link"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error-map_string_string"
+                        }
+                    },
+                    "401": {
+                        "description": "Missing API Key",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error-map_string_string"
+                        }
+                    },
+                    "403": {
+                        "description": "Invalid API Key",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error-map_string_string"
+                        }
+                    },
+                    "409": {
+                        "description": "Duplicated link",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error-map_string_string"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error-map_string_string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Error-map_string_string"
+                        }
                     }
                 }
             }
         }
     },
     "definitions": {
+        "api.Error-map_string_string": {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "$ref": "#/definitions/map_string_string"
+                },
+                "error": {
+                    "type": "string",
+                    "example": "NOT_FOUND"
+                }
+            }
+        },
         "health.HealthStatus": {
             "type": "object",
             "properties": {
@@ -108,6 +167,12 @@ const docTemplate = `{
                 "ttl": {
                     "type": "integer"
                 }
+            }
+        },
+        "map_string_string": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "string"
             }
         },
         "models.Link": {
