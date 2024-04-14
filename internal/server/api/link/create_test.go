@@ -92,14 +92,35 @@ const (
 	secretApiKey = "SECRET_API_KEY"
 )
 
+var (
+	publicDisabledCfg = &config.Config{
+		Public: &config.AppConfig{
+			Enabled: false,
+		},
+	}
+	publicEnabledCfg = &config.Config{
+		Public: &config.AppConfig{
+			Enabled:        true,
+			AllowedDomains: []string{"localhost"},
+		},
+	}
+	publicDisabledWithApp = &config.Config{
+		Public: &config.AppConfig{
+			Enabled: false,
+		},
+		Apps: map[string]*config.AppConfig{
+			"my-app": {
+				APIKey:         secretApiKey,
+				AllowedDomains: []string{"localhost"},
+				Enabled:        true,
+			},
+		},
+	}
+)
+
 func TestAuthorization(t *testing.T) {
 	t.Run("With no api key and public api disabled", func(t *testing.T) {
-		cfg := &config.Config{
-			Public: &config.AppConfig{
-				Enabled: false,
-			},
-		}
-		res, err := callCreateHandler(cfg, "", `{"original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(publicDisabledCfg, "", `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusUnauthorized, res.Status)
@@ -128,20 +149,7 @@ func TestAuthorization(t *testing.T) {
 	})
 
 	t.Run("With invalid api key", func(t *testing.T) {
-		app := &config.AppConfig{
-			APIKey:  secretApiKey,
-			Enabled: true,
-		}
-
-		cfg := &config.Config{
-			Public: &config.AppConfig{
-				Enabled: false,
-			},
-			Apps: map[string]*config.AppConfig{
-				"my-app": app,
-			},
-		}
-		res, err := callCreateHandler(cfg, "wrong-api-key", `{"original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(publicDisabledWithApp, "wrong-api-key", `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusUnauthorized, res.Status)
@@ -178,55 +186,21 @@ func TestAuthorization(t *testing.T) {
 	})
 
 	t.Run("With public api enabled", func(t *testing.T) {
-		cfg := &config.Config{
-			Public: &config.AppConfig{
-				Enabled:        true,
-				AllowedDomains: []string{"localhost"},
-			},
-		}
-		res, err := callCreateHandler(cfg, "", `{"original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(publicEnabledCfg, "", `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.Status)
 	})
 
 	t.Run("With valid api key", func(t *testing.T) {
-		app := &config.AppConfig{
-			APIKey:         secretApiKey,
-			Enabled:        true,
-			AllowedDomains: []string{"localhost"},
-		}
-
-		cfg := &config.Config{
-			Public: &config.AppConfig{
-				Enabled: false,
-			},
-			Apps: map[string]*config.AppConfig{
-				"my-app": app,
-			},
-		}
-		res, err := callCreateHandler(cfg, secretApiKey, `{"original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(publicDisabledWithApp, secretApiKey, `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.Status)
 	})
 
 	t.Run("With domain not allowed", func(t *testing.T) {
-		app := &config.AppConfig{
-			APIKey:         secretApiKey,
-			Enabled:        true,
-			AllowedDomains: []string{"localhost"},
-		}
-
-		cfg := &config.Config{
-			Public: &config.AppConfig{
-				Enabled: false,
-			},
-			Apps: map[string]*config.AppConfig{
-				"my-app": app,
-			},
-		}
-		res, err := callCreateHandler(cfg, secretApiKey, `{"domain": "google.com", "original_url": "http://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(publicDisabledWithApp, secretApiKey, `{"domain": "google.com", "original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusForbidden, res.Status)
@@ -253,8 +227,7 @@ func TestInvalidData(t *testing.T) {
 	})
 
 	t.Run("With missing ttl", func(t *testing.T) {
-		cfg := &config.Config{}
-		res, err := callCreateHandler(cfg, "", `{"original_url": "https://google.com"}`)
+		res, err := callCreateHandler(&config.Config{}, "", `{"original_url": "https://google.com"}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusUnprocessableEntity, res.Status)
@@ -266,13 +239,7 @@ func TestInvalidData(t *testing.T) {
 	})
 
 	t.Run("With negative ttl", func(t *testing.T) {
-		cfg := &config.Config{
-			Public: &config.AppConfig{
-				Enabled:        true,
-				AllowedDomains: []string{"localhost"},
-			},
-		}
-		res, err := callCreateHandler(cfg, "", `{"ttl": -1, "original_url": "https://google.com"}`)
+		res, err := callCreateHandler(publicEnabledCfg, "", `{"ttl": -1, "original_url": "https://google.com"}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusUnprocessableEntity, res.Status)
@@ -287,14 +254,7 @@ func TestInvalidData(t *testing.T) {
 		err := rdb.Close()
 		assert.NoError(t, err)
 
-		cfg := &config.Config{
-			Public: &config.AppConfig{
-				Enabled:        true,
-				AllowedDomains: []string{"localhost"},
-			},
-		}
-
-		res, err := callCreateHandler(cfg, "", `{"original_url": "https://google.com", "ttl": 20}`)
+		res, err := callCreateHandler(publicEnabledCfg, "", `{"original_url": "https://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusInternalServerError, res.Status)
@@ -310,15 +270,9 @@ func TestInvalidData(t *testing.T) {
 
 func TestCreation(t *testing.T) {
 	rdb.FlushDB(context.Background())
-	cfg := &config.Config{
-		Public: &config.AppConfig{
-			Enabled:        true,
-			AllowedDomains: []string{"localhost"},
-		},
-	}
 
 	t.Run("With specified domain and slug", func(t *testing.T) {
-		res, err := callCreateHandler(cfg, "", `{"domain": "localhost", "slug": "hello", "original_url": "http://google.com", "ttl": 23}`)
+		res, err := callCreateHandler(publicEnabledCfg, "", `{"domain": "localhost", "slug": "hello", "original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.Status)
@@ -333,7 +287,7 @@ func TestCreation(t *testing.T) {
 	})
 
 	t.Run("With specified domain and random slug", func(t *testing.T) {
-		res, err := callCreateHandler(cfg, "", `{"domain": "localhost", "original_url": "http://google.com", "ttl": 23}`)
+		res, err := callCreateHandler(publicEnabledCfg, "", `{"domain": "localhost", "original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.Status)
@@ -354,7 +308,7 @@ func TestCreation(t *testing.T) {
 	})
 
 	t.Run("With random slug and no domain", func(t *testing.T) {
-		res, err := callCreateHandler(cfg, "", `{"original_url": "http://google.com", "ttl": 23}`)
+		res, err := callCreateHandler(publicEnabledCfg, "", `{"original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.Status)
@@ -375,12 +329,12 @@ func TestCreation(t *testing.T) {
 	})
 
 	t.Run("With slug and domain pair already in use", func(t *testing.T) {
-		res, err := callCreateHandler(cfg, "", `{"domain":"localhost", "slug": "flamengo", "original_url": "http://google.com", "ttl": 23}`)
+		res, err := callCreateHandler(publicEnabledCfg, "", `{"domain":"localhost", "slug": "flamengo", "original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.Status)
 
-		res, err = callCreateHandler(cfg, "", `{"domain":"localhost", "slug": "flamengo", "original_url": "http://bing.com", "ttl": 23}`)
+		res, err = callCreateHandler(publicEnabledCfg, "", `{"domain":"localhost", "slug": "flamengo", "original_url": "http://bing.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusConflict, res.Status)
@@ -395,7 +349,7 @@ func TestCreation(t *testing.T) {
 	})
 
 	t.Run("Check TTL", func(t *testing.T) {
-		res, err := callCreateHandler(cfg, "", `{"slug": "short", "domain": "localhost", "original_url": "http://google.com", "ttl": 23}`)
+		res, err := callCreateHandler(publicEnabledCfg, "", `{"slug": "short", "domain": "localhost", "original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.Status)
@@ -406,7 +360,7 @@ func TestCreation(t *testing.T) {
 	})
 
 	t.Run("As not expiring link", func(t *testing.T) {
-		res, err := callCreateHandler(cfg, "", `{"slug": "final", "domain": "localhost", "original_url": "http://google.com", "ttl": 0}`)
+		res, err := callCreateHandler(publicEnabledCfg, "", `{"slug": "final", "domain": "localhost", "original_url": "http://google.com", "ttl": 0}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.Status)
@@ -419,13 +373,8 @@ func TestCreation(t *testing.T) {
 
 func TestBlacklistedSlugs(t *testing.T) {
 	test := func(slug string) {
-		cfg := &config.Config{
-			Public: &config.AppConfig{
-				Enabled: true,
-			},
-		}
 		res, err := callCreateHandler(
-			cfg,
+			publicEnabledCfg,
 			"",
 			`{"slug": "`+slug+`", "original_url": "http://google.com", "ttl": 23}`,
 		)
