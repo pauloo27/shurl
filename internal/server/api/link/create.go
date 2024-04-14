@@ -15,6 +15,15 @@ import (
 	"github.com/pauloo27/shurl/internal/server/validator"
 )
 
+var (
+	SlugBlacklist = map[string]bool{
+		"api":        true,
+		"links":      true,
+		"admin":      true,
+		"robots.txt": true,
+	}
+)
+
 const (
 	DefaultSlugLength = 8
 )
@@ -47,6 +56,11 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		}
 		slug = randomSlug
 		slog.Info("Slug not provided, generating a random one", "slug", slug)
+	}
+
+	if SlugBlacklist[slug] {
+		api.Err(w, http.StatusForbidden, api.ForbiddenErr, "Slug is blacklisted")
+		return
 	}
 
 	var app *config.AppConfig
@@ -96,10 +110,10 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	link := models.Link{
-		Slug:   slug,
-		Domain: domain,
-		OriginalURL:    body.OriginalURL,
-		TTL:    ttlInSecs,
+		Slug:        slug,
+		Domain:      domain,
+		OriginalURL: body.OriginalURL,
+		TTL:         ttlInSecs,
 	}
 
 	key := fmt.Sprintf("link:%s/%s", domain, slug)

@@ -393,3 +393,33 @@ func TestCreation(t *testing.T) {
 		assert.Equal(t, "http://google.com", rdbRes.Val())
 	})
 }
+
+func TestBlacklistedSlugs(t *testing.T) {
+	test := func(slug string) {
+		cfg := &config.Config{
+			Public: &config.AppConfig{
+				Enabled: true,
+			},
+		}
+		res, err := callCreateHandler(
+			cfg,
+			"",
+			`{"slug": "`+slug+`", "original_url": "http://google.com", "ttl": 23}`,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+
+		assert.Equal(t, http.StatusForbidden, res.Status)
+		assert.Equal(
+			t,
+			`{"detail":{"message":"Slug is blacklisted"},"error":"FORBIDDEN"}`,
+			strings.TrimSpace(res.Body),
+		)
+	}
+
+	for slug := range link.SlugBlacklist {
+		t.Run("With blacklisted slug "+slug, func(t *testing.T) {
+			test(slug)
+		})
+	}
+}
