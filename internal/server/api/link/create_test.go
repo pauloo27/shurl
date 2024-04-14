@@ -360,7 +360,10 @@ func TestCreation(t *testing.T) {
 	})
 
 	t.Run("As not expiring link", func(t *testing.T) {
-		res, err := callCreateHandler(publicEnabledCfg, "", `{"slug": "final", "domain": "localhost", "original_url": "http://google.com", "ttl": 0}`)
+		res, err := callCreateHandler(
+			publicEnabledCfg, "",
+			`{"slug": "final", "domain": "localhost", "original_url": "http://google.com", "ttl": 0}`,
+		)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.Status)
@@ -394,4 +397,52 @@ func TestBlacklistedSlugs(t *testing.T) {
 			test(slug)
 		})
 	}
+}
+
+func TestDurationLimit(t *testing.T) {
+	limitedCfg := &config.Config{
+		Public: &config.AppConfig{
+			Enabled:        true,
+			MaxDurationSec: 60,
+			MinDurationSec: 10,
+			AllowedDomains: []string{"localhost"},
+		},
+	}
+
+	t.Run("With ttl above limit", func(t *testing.T) {
+		res, err := callCreateHandler(
+			limitedCfg, "", `{"original_url": "http://google.com", "ttl": 61}`,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusBadRequest, res.Status)
+		assert.Equal(
+			t,
+			`{"error":"BAD_REQUEST","detail":{"message":"TTL too high, max is 60"}}`,
+			strings.TrimSpace(res.Body),
+		)
+	})
+
+	t.Run("With ttl bellow limit", func(t *testing.T) {
+		res, err := callCreateHandler(
+			limitedCfg, "", `{"original_url": "http://google.com", "ttl": 9}`,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusBadRequest, res.Status)
+		assert.Equal(
+			t,
+			`{"error":"BAD_REQUEST","detail":{"message":"TTL too low, min is 10"}}`,
+			strings.TrimSpace(res.Body),
+		)
+	})
+
+	t.Run("With ttl inside limits", func(t *testing.T) {
+		res, err := callCreateHandler(
+			limitedCfg, "", `{"original_url": "http://google.com", "ttl": 10, "slug": "inside"}`,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusCreated, res.Status)
+	})
 }

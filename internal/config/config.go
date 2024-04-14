@@ -44,8 +44,8 @@ type AppConfig struct {
 	Enabled        bool
 	APIKey         string
 	AllowedDomains []string
+	MinDurationSec int
+	MaxDurationSec int
 	//LimitPerIPPerHour int TODO:
 	//AllowCustomSlug bool TODO:
-	//MinDurationSec  int TODO:
-	//MaxDurationSec  int TODO:
 }

@@ -131,6 +131,16 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		ttl = time.Duration(ttlInSecs) * time.Second
 	}
 
+	if app.MaxDurationSec != 0 && ttlInSecs > app.MaxDurationSec {
+		api.Err(w, api.BadRequestErr, fmt.Sprintf("TTL too high, max is %d", app.MaxDurationSec))
+		return
+	}
+
+	if app.MinDurationSec != 0 && ttlInSecs < app.MinDurationSec {
+		api.Err(w, api.BadRequestErr, fmt.Sprintf("TTL too low, min is %d", app.MinDurationSec))
+		return
+	}
+
 	link := models.Link{
 		Slug:        slug,
 		Domain:      domain,

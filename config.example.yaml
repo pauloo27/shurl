@@ -21,6 +21,10 @@ redict:
 public:
   # allow public usage?
   enabled: true
+  # minimum duration of the short link
+  minDurationSec: 5
+  # maximum duration of the short link
+  maxDurationSec: 86400 # 24 hours
   # a list of the domains it may use
   allowedDomains:
     - localhost:42069
@@ -31,6 +35,10 @@ apps:
     enabled: true
     # api key used by the app
     apiKey: 8140e244-0f44-42e1-a7b2-295e53e2b334
+    # minimum duration of the short link
+    minDurationSec: 5
+    # maximum duration of the short link
+    maxDurationSec: 86400 # 24 hours
     # a list of the domains it may use
     allowedDomains:
       - localhost:42069
