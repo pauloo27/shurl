@@ -52,6 +52,12 @@ jobs:
 
       - name: Inspect
         run: make inspect
+
+      - name: Check if Swagger is up to date
+        run: |
+          make install-swaggo
+          make swagger
+          git diff --exit-code ./internal/server/docs
   
   deploy:
     needs: [build, test, inspect]

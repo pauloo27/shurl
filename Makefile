@@ -62,6 +62,10 @@ install-inspect-tools:
 	go install honnef.co/go/tools/cmd/staticcheck@latest
 	go install github.com/securego/gosec/v2/cmd/gosec@latest
 
+.PHONY: install-swaggo
+install-swaggo:
+	go install github.com/swaggo/swag/cmd/swag@latest
+
 .PHONY: install-dev-tools
 install-dev-tools:
 	go install github.com/cosmtrek/air@latest
