@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/pauloo27/shurl/internal/ctx"
 	"github.com/pauloo27/shurl/internal/server/api"
 	"github.com/redis/go-redis/v9"
@@ -27,7 +26,7 @@ func Redirect(w http.ResponseWriter, r *http.Request) {
 	rdb := ctx.GetServices(c).Rdb
 
 	domain := r.Host
-	slug := chi.URLParam(r, "slug")
+	slug := r.PathValue("slug")
 
 	key := fmt.Sprintf("link:%s/%s", domain, slug)
 

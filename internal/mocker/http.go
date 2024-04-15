@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"strings"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/pauloo27/shurl/internal/config"
 	"github.com/pauloo27/shurl/internal/ctx"
 	"github.com/redis/go-redis/v9"
@@ -44,13 +43,10 @@ func CallHandler(handler http.HandlerFunc, data RequestData) (*Response, error) 
 	}
 
 	r = r.WithContext(context.WithValue(r.Context(), ctx.ServicesKey, services))
-	chiCtx := chi.NewRouteContext()
 
 	for k, v := range data.URLParams {
-		chiCtx.URLParams.Add(k, v)
+		r.SetPathValue(k, v)
 	}
-
-	r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, chiCtx))
 
 	handler(w, r)
 

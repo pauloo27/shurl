@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/alicebob/miniredis/v2 v2.32.1
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-chi/chi/v5 v5.0.10
+	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/lmittmann/tint v1.0.3
 	github.com/matoous/go-nanoid/v2 v2.0.0
