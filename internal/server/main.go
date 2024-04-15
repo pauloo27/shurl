@@ -7,8 +7,9 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chi_middleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/pauloo27/shurl/internal/ctx"
+	"github.com/pauloo27/shurl/internal/server/middleware"
 	"github.com/pauloo27/shurl/internal/server/router"
 )
 
@@ -21,11 +22,12 @@ import (
 func StartServer(services *ctx.Services) error {
 	r := chi.NewRouter()
 
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(loggerMiddleware)
-	r.Use(middleware.Recoverer)
-	r.Use(servicesContext(services))
+	r.Use(chi_middleware.RequestID)
+	r.Use(chi_middleware.RealIP)
+	r.Use(chi_middleware.Recoverer)
+
+	r.Use(middleware.LoggerMiddleware)
+	r.Use(middleware.ServicesContext(services))
 
 	router.RouteApp(r)
 

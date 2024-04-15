@@ -1,4 +1,4 @@
-package server
+package middleware
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/pauloo27/shurl/internal/ctx"
 )
 
-func servicesContext(services *ctx.Services) func(http.Handler) http.Handler {
+func ServicesContext(services *ctx.Services) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			next.ServeHTTP(
