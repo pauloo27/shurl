@@ -10,14 +10,14 @@ import (
 type Key string
 
 const (
-	ServicesKey Key = "services"
+	ProvidersKey Key = "providers"
 )
 
-type Services struct {
+type Providers struct {
 	Config *config.Config
 	Rdb    *redis.Client
 }
 
-func GetServices(ctx context.Context) *Services {
-	return ctx.Value(ServicesKey).(*Services)
+func GetProviders(ctx context.Context) *Providers {
+	return ctx.Value(ProvidersKey).(*Providers)
 }

@@ -19,7 +19,7 @@ import (
 // @license.name	MIT
 // @license.url	https://opensource.org/licenses/MIT
 // @BasePath		/api/v1
-func StartServer(services *ctx.Services) error {
+func StartServer(providers *ctx.Providers) error {
 	r := chi.NewRouter()
 
 	r.Use(chi_middleware.RequestID)
@@ -27,11 +27,11 @@ func StartServer(services *ctx.Services) error {
 	r.Use(chi_middleware.Recoverer)
 
 	r.Use(middleware.LoggerMiddleware)
-	r.Use(middleware.ServicesContext(services))
+	r.Use(middleware.ProvidersContext(providers))
 
 	router.RouteApp(r)
 
-	bindAddr := fmt.Sprintf(":%d", services.Config.HTTP.Port)
+	bindAddr := fmt.Sprintf(":%d", providers.Config.HTTP.Port)
 
 	slog.Info("Starting server", "addr", bindAddr)
 

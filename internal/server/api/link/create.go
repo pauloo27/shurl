@@ -64,9 +64,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c := r.Context()
-	services := ctx.GetServices(c)
-	cfg := services.Config
-	rdb := services.Rdb
+	providers := ctx.GetProviders(c)
+	cfg := providers.Config
+	rdb := providers.Rdb
 
 	slug := body.Slug
 	if slug == "" {

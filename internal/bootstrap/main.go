@@ -22,12 +22,12 @@ func Start(cfg *config.Config) {
 		os.Exit(1)
 	}
 
-	services := &ctx.Services{
+	providers := &ctx.Providers{
 		Config: cfg,
 		Rdb:    rdb,
 	}
 
-	err = server.StartServer(services)
+	err = server.StartServer(providers)
 	if err != nil {
 		slog.Error("Failed to start server:", "err", err)
 		os.Exit(1)

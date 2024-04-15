@@ -21,7 +21,7 @@ const docTemplate = `{
     "paths": {
         "/healthz": {
             "get": {
-                "description": "Get the health status of the service",
+                "description": "Get the health status of the server",
                 "produces": [
                     "application/json"
                 ],

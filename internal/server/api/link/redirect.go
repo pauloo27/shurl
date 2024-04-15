@@ -23,7 +23,7 @@ import (
 //	@Router			/{slug} [get]
 func Redirect(w http.ResponseWriter, r *http.Request) {
 	c := r.Context()
-	rdb := ctx.GetServices(c).Rdb
+	rdb := ctx.GetProviders(c).Rdb
 
 	domain := r.Host
 	slug := r.PathValue("slug")

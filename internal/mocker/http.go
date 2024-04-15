@@ -37,12 +37,12 @@ func CallHandler(handler http.HandlerFunc, data RequestData) (*Response, error) 
 	r.Header = data.Headers
 	r.Host = data.Host
 
-	services := &ctx.Services{
+	providers := &ctx.Providers{
 		Config: data.Config,
 		Rdb:    data.Rdb,
 	}
 
-	r = r.WithContext(context.WithValue(r.Context(), ctx.ServicesKey, services))
+	r = r.WithContext(context.WithValue(r.Context(), ctx.ProvidersKey, providers))
 
 	for k, v := range data.URLParams {
 		r.SetPathValue(k, v)
