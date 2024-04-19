@@ -1,6 +1,9 @@
 BINARY_NAME = shurl
 TEST_COMMAND = go test -v
 
+.PHONY: all
+all: swagger build
+
 .PHONY: build
 build:
 	CGO_ENABLED=0 go build -v -o $(BINARY_NAME) ./cmd/$(BINARY_NAME)
@@ -51,7 +54,7 @@ gosec:
 .PHONY: swagger
 swagger:
 	swag fmt
-	swag init --dir ./internal/server/,./internal/models/ --output ./internal/server/docs
+	swag init --dir ./internal/server/,./internal/models/ --output ./internal/server/docs --outputTypes go,yaml
 
 .PHONY: inspect
 inspect: lint gosec staticcheck
