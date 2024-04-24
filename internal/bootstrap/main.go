@@ -16,7 +16,7 @@ func Start(cfg *config.Config) {
 	slog.Info("Starting shurl!")
 	slog.Debug("If you can see this, debug logging is enabled!", "cool", true)
 
-	rdb, err := redis.New(cfg.Redict)
+	rdb, err := redict.New(cfg.Redict)
 	if err != nil {
 		slog.Error("Failed to connect to redis:", "err", err)
 		os.Exit(1)
