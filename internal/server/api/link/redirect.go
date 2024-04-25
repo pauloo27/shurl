@@ -35,14 +35,11 @@ func Redirect(r *http.Request) api.Response {
 
 	if err := res.Err(); err != nil {
 		if errors.Is(err, redis.Nil) {
-			log.Warn("Link not found", "domain", domain, "slug", slug)
 			return api.Err(api.NotFoundErr, "Link not found")
 		}
 		log.Error("Failed to get link", "slug", slug, "err", err)
 		return api.Err(api.InternalServerErr, "Something went wrong")
 	}
-
-	log.Info("Redirecting", "domain", domain, "slug", slug, "url", res.Val())
 
 	return api.Redirect(res.Val())
 }

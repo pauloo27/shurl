@@ -76,7 +76,6 @@ func Create(r *http.Request) api.Response {
 			return api.Err(api.InternalServerErr, "Something went wrong")
 		}
 		slug = randomSlug
-		log.Info("Slug not provided, generating a random one", "slug", slug)
 	}
 
 	if SlugBlacklist[slug] {
@@ -102,7 +101,6 @@ func Create(r *http.Request) api.Response {
 			log.Info("Missing allowed domains for app", "apiKey", app.APIKey)
 			return api.Err(api.ForbiddenErr, "No allowed domains for this app")
 		}
-		log.Info("Domain not provided, using the first allowed domain from app", "domain", domain)
 		domain = app.AllowedDomains[0]
 	} else {
 		allowed := false
@@ -144,13 +142,12 @@ func Create(r *http.Request) api.Response {
 
 	key := fmt.Sprintf("link:%s/%s", domain, slug)
 	cmd := rdb.SetNX(context.Background(), key, body.OriginalURL, ttl)
+
 	if cmd.Err() != nil {
-		log.Error("Failed to create link", "err", cmd.Err())
 		return api.Err(api.InternalServerErr, "Something went wrong")
 	}
 
 	if !cmd.Val() {
-		log.Error("Link already exists", "slug", slug)
 		return api.Err(api.ConflictErr, "Link already exists")
 	}
 
