@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/pauloo27/shurl/internal/ctx"
 )
 
 func LoggerMiddleware(next http.Handler) http.Handler {
@@ -14,20 +15,24 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 		start := time.Now()
 
 		id := r.Context().Value(middleware.RequestIDKey)
-		slog.Info(
+		providers := ctx.GetProviders(r.Context())
+
+		log := slog.With("id", id)
+
+		log.Info(
 			"Http request",
-			"id", id,
 			"remote_addr", r.RemoteAddr,
 			"method", r.Method,
 			"url", r.URL,
 		)
-		next.ServeHTTP(ww, r)
 
+		providers.Logger = log
+
+		next.ServeHTTP(ww, r)
 		status := ww.Status()
 
-		slog.Info(
+		log.Info(
 			"Http response",
-			"id", id,
 			"status", status,
 			"took", time.Since(start),
 		)

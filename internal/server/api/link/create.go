@@ -3,7 +3,6 @@ package link
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"time"
 
@@ -57,32 +56,31 @@ type CreateLinkBody struct {
 //	@Failure		422	{object}	api.Error[map[string]string]	"Validation error"
 //	@Security		ApiKeyAuth
 //	@Param			X-API-Key	header	string	false	"API Key, leave empty for public access (if enabled in the server)"
-func Create(w http.ResponseWriter, r *http.Request) {
-	body, ok := validator.MustGetBody[CreateLinkBody](w, r)
-	if !ok {
-		return
+func Create(r *http.Request) api.Response {
+	body, validationErr := validator.MustGetBody[CreateLinkBody](r)
+	if validationErr != nil {
+		return api.DetailedError(validationErr.Error, validationErr.Details)
 	}
 
 	c := r.Context()
 	providers := ctx.GetProviders(c)
 	cfg := providers.Config
 	rdb := providers.Rdb
+	log := providers.Logger
 
 	slug := body.Slug
 	if slug == "" {
 		randomSlug, err := gonanoid.New(DefaultSlugLength)
 		if err != nil {
-			slog.Error("Failed to generate random slug", "err", err)
-			api.Err(w, api.InternalServerErr, "Something went wrong")
-			return
+			log.Error("Failed to generate random slug", "err", err)
+			return api.Err(api.InternalServerErr, "Something went wrong")
 		}
 		slug = randomSlug
-		slog.Info("Slug not provided, generating a random one", "slug", slug)
+		log.Info("Slug not provided, generating a random one", "slug", slug)
 	}
 
 	if SlugBlacklist[slug] {
-		api.Err(w, api.ForbiddenErr, "Slug is blacklisted")
-		return
+		return api.Err(api.ForbiddenErr, "Slug is blacklisted")
 	}
 
 	var app *config.AppConfig
@@ -95,18 +93,16 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if app == nil || !app.Enabled {
-		api.Err(w, api.UnauthorizedErr, "Invalid API key")
-		return
+		return api.Err(api.UnauthorizedErr, "Invalid API key")
 	}
 
 	domain := body.Domain
 	if domain == "" {
 		if len(app.AllowedDomains) == 0 {
-			api.Err(w, api.ForbiddenErr, "No allowed domains for this app")
-			slog.Info("Missing allowed domains for app", "apiKey", app.APIKey)
-			return
+			log.Info("Missing allowed domains for app", "apiKey", app.APIKey)
+			return api.Err(api.ForbiddenErr, "No allowed domains for this app")
 		}
-		slog.Info("Domain not provided, using the first allowed domain from app", "domain", domain)
+		log.Info("Domain not provided, using the first allowed domain from app", "domain", domain)
 		domain = app.AllowedDomains[0]
 	} else {
 		allowed := false
@@ -117,12 +113,11 @@ func Create(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if !allowed {
-			api.Err(w, api.ForbiddenErr, "Domain not allowed for this app")
-			return
+			return api.Err(api.ForbiddenErr, "Domain not allowed for this app")
 		}
 	}
 
-	slog.Info("Creating link", "domain", domain, "slug", slug, "url", body.OriginalURL)
+	log.Info("Creating link", "domain", domain, "slug", slug, "url", body.OriginalURL)
 
 	ttlInSecs := *body.TTL
 	var ttl time.Duration
@@ -132,13 +127,11 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if app.MaxDurationSec != 0 && ttlInSecs > app.MaxDurationSec {
-		api.Err(w, api.BadRequestErr, fmt.Sprintf("TTL too high, max is %d", app.MaxDurationSec))
-		return
+		return api.Err(api.BadRequestErr, fmt.Sprintf("TTL too high, max is %d", app.MaxDurationSec))
 	}
 
 	if app.MinDurationSec != 0 && ttlInSecs < app.MinDurationSec {
-		api.Err(w, api.BadRequestErr, fmt.Sprintf("TTL too low, min is %d", app.MinDurationSec))
-		return
+		return api.Err(api.BadRequestErr, fmt.Sprintf("TTL too low, min is %d", app.MinDurationSec))
 	}
 
 	link := models.Link{
@@ -152,16 +145,14 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	key := fmt.Sprintf("link:%s/%s", domain, slug)
 	cmd := rdb.SetNX(context.Background(), key, body.OriginalURL, ttl)
 	if cmd.Err() != nil {
-		slog.Error("Failed to create link", "err", cmd.Err())
-		api.Err(w, api.InternalServerErr, "Something went wrong")
-		return
+		log.Error("Failed to create link", "err", cmd.Err())
+		return api.Err(api.InternalServerErr, "Something went wrong")
 	}
 
 	if !cmd.Val() {
-		slog.Error("Link already exists", "slug", slug)
-		api.Err(w, api.ConflictErr, "Link already exists")
-		return
+		log.Error("Link already exists", "slug", slug)
+		return api.Err(api.ConflictErr, "Link already exists")
 	}
 
-	api.Created(w, link)
+	return api.Created(link)
 }

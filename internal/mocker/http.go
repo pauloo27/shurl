@@ -2,21 +2,18 @@ package mocker
 
 import (
 	"context"
-	"io"
+	"encoding/json"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 
 	"github.com/pauloo27/shurl/internal/config"
 	"github.com/pauloo27/shurl/internal/ctx"
+	"github.com/pauloo27/shurl/internal/server/api"
+	"github.com/pauloo27/shurl/internal/server/router"
 	"github.com/redis/go-redis/v9"
 )
-
-type Response struct {
-	Status  int
-	Body    string
-	Headers http.Header
-}
 
 type RequestData struct {
 	Host      string
@@ -31,8 +28,12 @@ type RequestData struct {
 	Rdb    *redis.Client
 }
 
-func CallHandler(handler http.HandlerFunc, data RequestData) (*Response, error) {
-	w := httptest.NewRecorder()
+type Response struct {
+	*api.Response
+	StringBody string
+}
+
+func CallHandler(handler router.WrappedHandler, data RequestData) (*Response, error) {
 	r := httptest.NewRequest(data.Method, data.Path, strings.NewReader(data.Body))
 	r.Header = data.Headers
 	r.Host = data.Host
@@ -40,6 +41,7 @@ func CallHandler(handler http.HandlerFunc, data RequestData) (*Response, error) 
 	providers := &ctx.Providers{
 		Config: data.Config,
 		Rdb:    data.Rdb,
+		Logger: slog.Default(),
 	}
 
 	r = r.WithContext(context.WithValue(r.Context(), ctx.ProvidersKey, providers))
@@ -48,18 +50,15 @@ func CallHandler(handler http.HandlerFunc, data RequestData) (*Response, error) 
 		r.SetPathValue(k, v)
 	}
 
-	handler(w, r)
+	res := handler(r)
 
-	rawBody, err := io.ReadAll(w.Result().Body)
+	encodedBody, err := json.Marshal(res.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	res := Response{
-		Status:  w.Result().StatusCode,
-		Body:    string(rawBody),
-		Headers: w.Result().Header,
-	}
-
-	return &res, nil
+	return &Response{
+		Response:   &res,
+		StringBody: string(encodedBody),
+	}, nil
 }

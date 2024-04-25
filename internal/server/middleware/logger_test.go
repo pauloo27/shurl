@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	chi_middleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/pauloo27/shurl/internal/ctx"
 	"github.com/pauloo27/shurl/internal/server/middleware"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,8 +26,9 @@ func TestLoggerMiddleware(t *testing.T) {
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.RemoteAddr = "127.0.0.1"
 
-	ctx := context.WithValue(context.Background(), chi_middleware.RequestIDKey, "123")
-	req = req.WithContext(ctx)
+	c := context.WithValue(context.Background(), chi_middleware.RequestIDKey, "123")
+	c = context.WithValue(c, ctx.ProvidersKey, &ctx.Providers{})
+	req = req.WithContext(c)
 
 	res := httptest.NewRecorder()
 

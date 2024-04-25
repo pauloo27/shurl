@@ -2,39 +2,37 @@ package validator
 
 import (
 	"encoding/json"
-	"errors"
-	"io"
 	"log/slog"
 	"net/http"
 
 	"github.com/pauloo27/shurl/internal/server/api"
 )
 
-/*
-MustGetBody is a helper function that decodes the body of an HTTP request into a struct and validates it. Returns the struct and a bool that is true if it's valid and false otherwise.
-The function writes an error response to the response writer if the body is missing or if the body is invalid.
-*/
-func MustGetBody[T any](w http.ResponseWriter, r *http.Request) (T, bool) {
+type APIBodyValidationError struct {
+	Details any
+	Error   api.ErrorType
+}
+
+func MustGetBody[T any](r *http.Request) (T, *APIBodyValidationError) {
 	var body T
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		slog.Error("Failed to decode body", "err", err)
-		if errors.Is(err, io.EOF) {
-			api.Err(w, api.BadRequestErr, "Missing body")
-		} else {
-			api.Err(w, api.BadRequestErr, err.Error())
+		return body, &APIBodyValidationError{
+			Error:   api.BadRequestErr,
+			Details: map[string]string{"message": err.Error()},
 		}
-		return body, false
 	}
 
 	validationErrors := Validate(body)
 
-	if validationErrors == nil {
-		return body, true
+	if len(validationErrors) > 0 {
+		return body, &APIBodyValidationError{
+			Error:   api.ValidationErr,
+			Details: validationErrors,
+		}
 	}
 
-	api.DetailedError(w, api.ValidationErr, validationErrors)
-
-	return body, false
+	return body, nil
 }

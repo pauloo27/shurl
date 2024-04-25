@@ -18,8 +18,8 @@ func RouteApp(root *chi.Mux) {
 	})
 
 	root.Route("/api/v1", func(r chi.Router) {
-		r.Get("/healthz", health.Health)
-		r.Post("/links", link.Create)
+		r.Get("/healthz", wrap(health.Health))
+		r.Post("/links", wrap(link.Create))
 		r.Get("/swagger/*", httpSwagger.Handler(
 			httpSwagger.URL("/api/v1/swagger/doc.json"),
 		))
@@ -28,5 +28,5 @@ func RouteApp(root *chi.Mux) {
 		})
 	})
 
-	root.Get("/{slug}", link.Redirect)
+	root.Get("/{slug}", wrap(link.Redirect))
 }

@@ -20,7 +20,8 @@ import (
 
 func unmarshalAndValidate(raw string) (link.CreateLinkBody, bool) {
 	r := httptest.NewRequest("POST", "/api/link", bytes.NewBufferString(raw))
-	return validator.MustGetBody[link.CreateLinkBody](httptest.NewRecorder(), r)
+	body, err := validator.MustGetBody[link.CreateLinkBody](r)
+	return body, err == nil
 }
 
 func TestValidateBody(t *testing.T) {
@@ -123,11 +124,11 @@ func TestAuthorization(t *testing.T) {
 		res, err := callCreateHandler(publicDisabledCfg, "", `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusUnauthorized, res.Status)
+		assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
 		assert.Equal(
 			t,
 			`{"error":"UNAUTHORIZED","detail":{"message":"Invalid API key"}}`,
-			strings.TrimSpace(res.Body),
+			strings.TrimSpace(res.StringBody),
 		)
 	})
 
@@ -140,11 +141,11 @@ func TestAuthorization(t *testing.T) {
 		res, err := callCreateHandler(cfg, "", `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusForbidden, res.Status)
+		assert.Equal(t, http.StatusForbidden, res.StatusCode)
 		assert.Equal(
 			t,
 			`{"error":"FORBIDDEN","detail":{"message":"No allowed domains for this app"}}`,
-			strings.TrimSpace(res.Body),
+			strings.TrimSpace(res.StringBody),
 		)
 	})
 
@@ -152,11 +153,11 @@ func TestAuthorization(t *testing.T) {
 		res, err := callCreateHandler(publicDisabledWithApp, "wrong-api-key", `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusUnauthorized, res.Status)
+		assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
 		assert.Equal(
 			t,
 			`{"error":"UNAUTHORIZED","detail":{"message":"Invalid API key"}}`,
-			strings.TrimSpace(res.Body),
+			strings.TrimSpace(res.StringBody),
 		)
 	})
 
@@ -177,11 +178,11 @@ func TestAuthorization(t *testing.T) {
 		res, err := callCreateHandler(cfg, secretApiKey, `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusUnauthorized, res.Status)
+		assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
 		assert.Equal(
 			t,
 			`{"error":"UNAUTHORIZED","detail":{"message":"Invalid API key"}}`,
-			strings.TrimSpace(res.Body),
+			strings.TrimSpace(res.StringBody),
 		)
 	})
 
@@ -189,25 +190,25 @@ func TestAuthorization(t *testing.T) {
 		res, err := callCreateHandler(publicEnabledCfg, "", `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusCreated, res.Status)
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
 	})
 
 	t.Run("With valid api key", func(t *testing.T) {
 		res, err := callCreateHandler(publicDisabledWithApp, secretApiKey, `{"original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusCreated, res.Status)
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
 	})
 
 	t.Run("With domain not allowed", func(t *testing.T) {
 		res, err := callCreateHandler(publicDisabledWithApp, secretApiKey, `{"domain": "google.com", "original_url": "http://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusForbidden, res.Status)
+		assert.Equal(t, http.StatusForbidden, res.StatusCode)
 		assert.Equal(
 			t,
 			`{"error":"FORBIDDEN","detail":{"message":"Domain not allowed for this app"}}`,
-			strings.TrimSpace(res.Body),
+			strings.TrimSpace(res.StringBody),
 		)
 	})
 }
@@ -218,11 +219,11 @@ func TestInvalidData(t *testing.T) {
 		res, err := callCreateHandler(cfg, "", `{"`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusBadRequest, res.Status)
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 		assert.Equal(
 			t,
 			`{"error":"BAD_REQUEST","detail":{"message":"unexpected EOF"}}`,
-			strings.TrimSpace(res.Body),
+			strings.TrimSpace(res.StringBody),
 		)
 	})
 
@@ -230,11 +231,11 @@ func TestInvalidData(t *testing.T) {
 		res, err := callCreateHandler(&config.Config{}, "", `{"original_url": "https://google.com"}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusUnprocessableEntity, res.Status)
+		assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 		assert.Equal(
 			t,
 			`{"error":"VALIDATION_ERROR","detail":[{"field":"ttl","error":"min 0"}]}`,
-			strings.TrimSpace(res.Body),
+			strings.TrimSpace(res.StringBody),
 		)
 	})
 
@@ -242,11 +243,11 @@ func TestInvalidData(t *testing.T) {
 		res, err := callCreateHandler(publicEnabledCfg, "", `{"ttl": -1, "original_url": "https://google.com"}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusUnprocessableEntity, res.Status)
+		assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 		assert.Equal(
 			t,
 			`{"error":"VALIDATION_ERROR","detail":[{"field":"ttl","error":"min 0"}]}`,
-			strings.TrimSpace(res.Body),
+			strings.TrimSpace(res.StringBody),
 		)
 	})
 
@@ -257,11 +258,11 @@ func TestInvalidData(t *testing.T) {
 		res, err := callCreateHandler(publicEnabledCfg, "", `{"original_url": "https://google.com", "ttl": 20}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusInternalServerError, res.Status)
+		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
 		assert.Equal(
 			t,
 			`{"error":"INTERNAL_SERVER_ERROR","detail":{"message":"Something went wrong"}}`,
-			strings.TrimSpace(res.Body),
+			strings.TrimSpace(res.StringBody),
 		)
 
 		rdb = mocker.MakeRedictMock()
@@ -275,11 +276,11 @@ func TestCreation(t *testing.T) {
 		res, err := callCreateHandler(publicEnabledCfg, "", `{"domain": "localhost", "slug": "hello", "original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusCreated, res.Status)
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
 		assert.Equal(
 			t,
 			`{"slug":"hello","domain":"localhost","original_url":"http://google.com","url":"https://localhost/hello","ttl":23}`,
-			strings.TrimSpace(res.Body),
+			strings.TrimSpace(res.StringBody),
 		)
 
 		rdbRes := rdb.Get(context.Background(), "link:localhost/hello")
@@ -290,10 +291,10 @@ func TestCreation(t *testing.T) {
 		res, err := callCreateHandler(publicEnabledCfg, "", `{"domain": "localhost", "original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusCreated, res.Status)
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
 
 		var link models.Link
-		err = json.Unmarshal([]byte(res.Body), &link)
+		err = json.Unmarshal([]byte(res.StringBody), &link)
 		assert.NoError(t, err)
 
 		assert.Equal(t, "localhost", link.Domain)
@@ -312,10 +313,10 @@ func TestCreation(t *testing.T) {
 		res, err := callCreateHandler(publicEnabledCfg, "", `{"original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusCreated, res.Status)
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
 
 		var link models.Link
-		err = json.Unmarshal([]byte(res.Body), &link)
+		err = json.Unmarshal([]byte(res.StringBody), &link)
 		assert.NoError(t, err)
 
 		assert.Equal(t, "localhost", link.Domain)
@@ -334,16 +335,16 @@ func TestCreation(t *testing.T) {
 		res, err := callCreateHandler(publicEnabledCfg, "", `{"domain":"localhost", "slug": "flamengo", "original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusCreated, res.Status)
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
 
 		res, err = callCreateHandler(publicEnabledCfg, "", `{"domain":"localhost", "slug": "flamengo", "original_url": "http://bing.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusConflict, res.Status)
+		assert.Equal(t, http.StatusConflict, res.StatusCode)
 		assert.Equal(
 			t,
 			`{"error":"CONFLICT","detail":{"message":"Link already exists"}}`,
-			strings.TrimSpace(res.Body),
+			strings.TrimSpace(res.StringBody),
 		)
 
 		rdbRes := rdb.Get(context.Background(), "link:localhost/flamengo")
@@ -354,7 +355,7 @@ func TestCreation(t *testing.T) {
 		res, err := callCreateHandler(publicEnabledCfg, "", `{"slug": "short", "domain": "localhost", "original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusCreated, res.Status)
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
 
 		rdbRes, err := rdb.TTL(context.Background(), "link:localhost/short").Result()
 		assert.NoError(t, err)
@@ -368,7 +369,7 @@ func TestCreation(t *testing.T) {
 		)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusCreated, res.Status)
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
 
 		rdbRes, err := rdb.TTL(context.Background(), "link:localhost/final").Result()
 		assert.NoError(t, err)
@@ -386,11 +387,11 @@ func TestBlacklistedSlugs(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 
-		assert.Equal(t, http.StatusForbidden, res.Status)
+		assert.Equal(t, http.StatusForbidden, res.StatusCode)
 		assert.Equal(
 			t,
 			`{"error":"FORBIDDEN","detail":{"message":"Slug is blacklisted"}}`,
-			strings.TrimSpace(res.Body),
+			strings.TrimSpace(res.StringBody),
 		)
 	}
 
@@ -417,11 +418,11 @@ func TestDurationLimit(t *testing.T) {
 		)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusBadRequest, res.Status)
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 		assert.Equal(
 			t,
 			`{"error":"BAD_REQUEST","detail":{"message":"TTL too high, max is 60"}}`,
-			strings.TrimSpace(res.Body),
+			strings.TrimSpace(res.StringBody),
 		)
 	})
 
@@ -431,11 +432,11 @@ func TestDurationLimit(t *testing.T) {
 		)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusBadRequest, res.Status)
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 		assert.Equal(
 			t,
 			`{"error":"BAD_REQUEST","detail":{"message":"TTL too low, min is 10"}}`,
-			strings.TrimSpace(res.Body),
+			strings.TrimSpace(res.StringBody),
 		)
 	})
 
@@ -445,6 +446,6 @@ func TestDurationLimit(t *testing.T) {
 		)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusCreated, res.Status)
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
 	})
 }

@@ -21,8 +21,9 @@ type HealthStatus struct {
 //	@Success		200	{object}	HealthStatus
 //	@Failure		500	{object}	HealthStatus
 //	@Router			/healthz [get]
-func Health(w http.ResponseWriter, r *http.Request) {
+func Health(r *http.Request) api.Response {
 	providers := ctx.GetProviders(r.Context())
+	log := providers.Logger
 
 	ok := true
 	status := HealthStatus{
@@ -36,9 +37,9 @@ func Health(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !ok {
-		api.DetailedError(w, api.InternalServerErr, status)
-		return
+		log.Error("Health check failed", "status", status)
+		return api.DetailedError(api.InternalServerErr, status)
 	}
 
-	api.Ok(w, status)
+	return api.Ok(status)
 }

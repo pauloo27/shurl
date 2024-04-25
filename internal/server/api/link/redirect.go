@@ -3,7 +3,6 @@ package link
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 
 	"github.com/pauloo27/shurl/internal/ctx"
@@ -21,9 +20,11 @@ import (
 //	@Failure		404	{object}	api.Error[map[string]string]	"Link not found"
 //	@Failure		500	{object}	api.Error[map[string]string]	"Internal server error"
 //	@Router			/{slug} [get]
-func Redirect(w http.ResponseWriter, r *http.Request) {
+func Redirect(r *http.Request) api.Response {
 	c := r.Context()
-	rdb := ctx.GetProviders(c).Rdb
+	providers := ctx.GetProviders(c)
+	rdb := providers.Rdb
+	log := providers.Logger
 
 	domain := r.Host
 	slug := r.PathValue("slug")
@@ -34,16 +35,14 @@ func Redirect(w http.ResponseWriter, r *http.Request) {
 
 	if err := res.Err(); err != nil {
 		if errors.Is(err, redis.Nil) {
-			slog.Warn("Link not found", "domain", domain, "slug", slug)
-			api.Err(w, api.NotFoundErr, "Link not found")
-			return
+			log.Warn("Link not found", "domain", domain, "slug", slug)
+			return api.Err(api.NotFoundErr, "Link not found")
 		}
-		slog.Error("Failed to get link", "slug", slug, "err", err)
-		api.Err(w, api.InternalServerErr, "Something went wrong")
-		return
+		log.Error("Failed to get link", "slug", slug, "err", err)
+		return api.Err(api.InternalServerErr, "Something went wrong")
 	}
 
-	slog.Info("Redirecting", "domain", domain, "slug", slug, "url", res.Val())
+	log.Info("Redirecting", "domain", domain, "slug", slug, "url", res.Val())
 
-	http.Redirect(w, r, res.Val(), http.StatusTemporaryRedirect)
+	return api.Redirect(res.Val())
 }

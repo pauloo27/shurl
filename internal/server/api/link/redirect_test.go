@@ -37,8 +37,8 @@ func TestRedirect(t *testing.T) {
 
 		res, err := callRedirectHandler(cfg, "localhost", "hello")
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusTemporaryRedirect, res.Status)
-		assert.Equal(t, "http://example.com", res.Headers.Get("Location"))
+		assert.Equal(t, http.StatusTemporaryRedirect, res.StatusCode)
+		assert.Equal(t, "http://example.com", res.Header.Get("Location"))
 	})
 
 	t.Run("Mismatched domain and slug pair", func(t *testing.T) {
@@ -46,8 +46,8 @@ func TestRedirect(t *testing.T) {
 
 		res, err := callRedirectHandler(cfg, "localhost", "world")
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusNotFound, res.Status)
-		assert.Equal(t, `{"error":"NOT_FOUND","detail":{"message":"Link not found"}}`, strings.TrimSpace(res.Body))
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
+		assert.Equal(t, `{"error":"NOT_FOUND","detail":{"message":"Link not found"}}`, strings.TrimSpace(res.StringBody))
 	})
 
 	t.Run("Slug not found", func(t *testing.T) {
@@ -55,8 +55,8 @@ func TestRedirect(t *testing.T) {
 
 		res, err := callRedirectHandler(cfg, "localhost", "slug")
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusNotFound, res.Status)
-		assert.Equal(t, `{"error":"NOT_FOUND","detail":{"message":"Link not found"}}`, strings.TrimSpace(res.Body))
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
+		assert.Equal(t, `{"error":"NOT_FOUND","detail":{"message":"Link not found"}}`, strings.TrimSpace(res.StringBody))
 	})
 }
 
@@ -69,8 +69,12 @@ func TestRdbIsClosed(t *testing.T) {
 
 		res, err := callRedirectHandler(cfg, "localhost", "slug")
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusInternalServerError, res.Status)
-		assert.Equal(t, `{"error":"INTERNAL_SERVER_ERROR","detail":{"message":"Something went wrong"}}`, strings.TrimSpace(res.Body))
+		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
+		assert.Equal(
+			t,
+			`{"error":"INTERNAL_SERVER_ERROR","detail":{"message":"Something went wrong"}}`,
+			strings.TrimSpace(res.StringBody),
+		)
 	})
 
 	rdb = mocker.MakeRedictMock()

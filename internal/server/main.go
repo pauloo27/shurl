@@ -26,8 +26,8 @@ func StartServer(providers *ctx.Providers) error {
 	r.Use(chi_middleware.RealIP)
 	r.Use(chi_middleware.Recoverer)
 
-	r.Use(middleware.LoggerMiddleware)
 	r.Use(middleware.ProvidersContext(providers))
+	r.Use(middleware.LoggerMiddleware)
 
 	router.RouteApp(r)
 
