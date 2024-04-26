@@ -29,7 +29,6 @@ const (
 
 type CreateLinkBody struct {
 	Slug        string `json:"slug" validate:"omitempty,min=3,max=20,excludes=/"`
-	Domain      string `json:"domain" validate:"omitempty,min=1"`
 	OriginalURL string `json:"original_url" validate:"required,http_url"`
 	TTL         *int   `json:"ttl" validate:"min=0,max=31536000"`
 }
@@ -39,11 +38,10 @@ type CreateLinkBody struct {
 //	@Summary		Create a link
 //	@Description	Create a link from a slug to the original URL.
 //	@Description	If no slug is provided, a random one will be generated.
-//	@Description	If no domain is provided, the first allowed domain from the app will be used.
 //	@Description	The ttl is required. 0 means no expiration, otherwise it's the number of seconds until expiration.
 //	@Description	The ttl can't be greater than 1 year (31536000 seconds).
-//	@Description	The API Key may limit the allowed domains and the ttl.
-//	@Param			body	body	CreateLinkBody	true	"Domain and slug are optional"
+//	@Description	The API Key may limit the ttl.
+//	@Param			body	body	CreateLinkBody	true	"Slug is optional"
 //	@Tags			link
 //	@Produce		json
 //	@Router			/links [post]
@@ -95,25 +93,7 @@ func Create(r *http.Request) api.Response {
 		return api.Err(api.UnauthorizedErr, "Invalid API key")
 	}
 
-	domain := body.Domain
-	if domain == "" {
-		if len(app.AllowedDomains) == 0 {
-			log.Info("Missing allowed domains for app", "apiKey", app.APIKey)
-			return api.Err(api.ForbiddenErr, "No allowed domains for this app")
-		}
-		domain = app.AllowedDomains[0]
-	} else {
-		allowed := false
-		for _, allowedDomain := range app.AllowedDomains {
-			if domain == allowedDomain {
-				allowed = true
-				break
-			}
-		}
-		if !allowed {
-			return api.Err(api.ForbiddenErr, "Domain not allowed for this app")
-		}
-	}
+	domain := r.Host
 
 	log.Info("Creating link", "domain", domain, "slug", slug, "url", body.OriginalURL)
 

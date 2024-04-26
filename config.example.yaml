@@ -25,9 +25,6 @@ public:
   minDurationSec: 5
   # maximum duration of the short link
   maxDurationSec: 86400 # 24 hours
-  # a list of the domains it may use
-  allowedDomains:
-    - localhost:42069
 
 apps:
   testing:
@@ -39,6 +36,3 @@ apps:
     minDurationSec: 5
     # maximum duration of the short link
     maxDurationSec: 86400 # 24 hours
-    # a list of the domains it may use
-    allowedDomains:
-      - localhost:42069

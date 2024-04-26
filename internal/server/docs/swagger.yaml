@@ -15,9 +15,6 @@ definitions:
     type: object
   link.CreateLinkBody:
     properties:
-      domain:
-        minLength: 1
-        type: string
       original_url:
         type: string
       slug:
@@ -102,12 +99,11 @@ paths:
       description: |-
         Create a link from a slug to the original URL.
         If no slug is provided, a random one will be generated.
-        If no domain is provided, the first allowed domain from the app will be used.
         The ttl is required. 0 means no expiration, otherwise it's the number of seconds until expiration.
         The ttl can't be greater than 1 year (31536000 seconds).
-        The API Key may limit the allowed domains and the ttl.
+        The API Key may limit the ttl.
       parameters:
-      - description: Domain and slug are optional
+      - description: Slug is optional
         in: body
         name: body
         required: true

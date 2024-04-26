@@ -32,25 +32,25 @@ func TestValidateBody(t *testing.T) {
 	})
 
 	t.Run("All fields present and valid", func(t *testing.T) {
-		raw := `{"slug":"slug","domain":"domain","original_url":"http://example.com","ttl":1}`
+		raw := `{"slug":"slug","original_url":"http://example.com","ttl":1}`
 		_, ok := unmarshalAndValidate(raw)
 		assert.True(t, ok)
 	})
 
 	t.Run("Slug not present", func(t *testing.T) {
-		raw := `{"domain":"domain","original_url":"http://example.com","ttl":1}`
+		raw := `{"original_url":"http://example.com","ttl":1}`
 		_, ok := unmarshalAndValidate(raw)
 		assert.True(t, ok)
 	})
 
 	t.Run("Slug not present", func(t *testing.T) {
-		raw := `{"domain":"domain","original_url":"http://example.com","ttl":1}`
+		raw := `{"original_url":"http://example.com","ttl":1}`
 		_, ok := unmarshalAndValidate(raw)
 		assert.True(t, ok)
 	})
 
 	t.Run("Slug invalid", func(t *testing.T) {
-		raw := `{"slug": "x", "domain":"domain","original_url":"http://example.com","ttl":1}`
+		raw := `{"slug": "x","original_url":"http://example.com","ttl":1}`
 		_, ok := unmarshalAndValidate(raw)
 		assert.False(t, ok)
 	})
@@ -75,12 +75,17 @@ func TestValidateBody(t *testing.T) {
 }
 
 func callCreateHandler(cfg *config.Config, apiKey, body string) (*mocker.Response, error) {
+	return callCreateHandlerFromDomain(cfg, apiKey, body, "localhost")
+}
+
+func callCreateHandlerFromDomain(cfg *config.Config, apiKey, body, domain string) (*mocker.Response, error) {
 	headers := make(http.Header)
 	headers.Set("X-API-Key", apiKey)
 
 	data := mocker.RequestData{
 		Body:    body,
 		Headers: headers,
+		Host:    domain,
 		Path:    "/api/link",
 		Method:  "POST",
 		Config:  mocker.MakeConfigMock(cfg),
@@ -101,8 +106,7 @@ var (
 	}
 	publicEnabledCfg = &config.Config{
 		Public: &config.AppConfig{
-			Enabled:        true,
-			AllowedDomains: []string{"localhost"},
+			Enabled: true,
 		},
 	}
 	publicDisabledWithApp = &config.Config{
@@ -111,9 +115,8 @@ var (
 		},
 		Apps: map[string]*config.AppConfig{
 			"my-app": {
-				APIKey:         secretApiKey,
-				AllowedDomains: []string{"localhost"},
-				Enabled:        true,
+				APIKey:  secretApiKey,
+				Enabled: true,
 			},
 		},
 	}
@@ -128,23 +131,6 @@ func TestAuthorization(t *testing.T) {
 		assert.Equal(
 			t,
 			`{"error":"UNAUTHORIZED","detail":{"message":"Invalid API key"}}`,
-			strings.TrimSpace(res.StringBody),
-		)
-	})
-
-	t.Run("With public api enabled, but no domain", func(t *testing.T) {
-		cfg := &config.Config{
-			Public: &config.AppConfig{
-				Enabled: true,
-			},
-		}
-		res, err := callCreateHandler(cfg, "", `{"original_url": "http://google.com", "ttl": 20}`)
-		assert.NoError(t, err)
-		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusForbidden, res.StatusCode)
-		assert.Equal(
-			t,
-			`{"error":"FORBIDDEN","detail":{"message":"No allowed domains for this app"}}`,
 			strings.TrimSpace(res.StringBody),
 		)
 	})
@@ -198,18 +184,6 @@ func TestAuthorization(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.StatusCode)
-	})
-
-	t.Run("With domain not allowed", func(t *testing.T) {
-		res, err := callCreateHandler(publicDisabledWithApp, secretApiKey, `{"domain": "google.com", "original_url": "http://google.com", "ttl": 20}`)
-		assert.NoError(t, err)
-		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusForbidden, res.StatusCode)
-		assert.Equal(
-			t,
-			`{"error":"FORBIDDEN","detail":{"message":"Domain not allowed for this app"}}`,
-			strings.TrimSpace(res.StringBody),
-		)
 	})
 }
 
@@ -272,44 +246,7 @@ func TestInvalidData(t *testing.T) {
 func TestCreation(t *testing.T) {
 	rdb.FlushDB(context.Background())
 
-	t.Run("With specified domain and slug", func(t *testing.T) {
-		res, err := callCreateHandler(publicEnabledCfg, "", `{"domain": "localhost", "slug": "hello", "original_url": "http://google.com", "ttl": 23}`)
-		assert.NoError(t, err)
-		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusCreated, res.StatusCode)
-		assert.Equal(
-			t,
-			`{"slug":"hello","domain":"localhost","original_url":"http://google.com","url":"https://localhost/hello","ttl":23}`,
-			strings.TrimSpace(res.StringBody),
-		)
-
-		rdbRes := rdb.Get(context.Background(), "link:localhost/hello")
-		assert.Equal(t, "http://google.com", rdbRes.Val())
-	})
-
-	t.Run("With specified domain and random slug", func(t *testing.T) {
-		res, err := callCreateHandler(publicEnabledCfg, "", `{"domain": "localhost", "original_url": "http://google.com", "ttl": 23}`)
-		assert.NoError(t, err)
-		assert.NotNil(t, res)
-		assert.Equal(t, http.StatusCreated, res.StatusCode)
-
-		var link models.Link
-		err = json.Unmarshal([]byte(res.StringBody), &link)
-		assert.NoError(t, err)
-
-		assert.Equal(t, "localhost", link.Domain)
-		assert.Equal(t, "http://google.com", link.OriginalURL)
-		assert.NotEmpty(t, link.Slug)
-		assert.Equal(t, "https://localhost/"+link.Slug, link.URL)
-		assert.Equal(t, 23, link.TTL)
-
-		slug := link.Slug
-
-		rdbRes := rdb.Get(context.Background(), "link:localhost/"+slug)
-		assert.Equal(t, "http://google.com", rdbRes.Val())
-	})
-
-	t.Run("With random slug and no domain", func(t *testing.T) {
+	t.Run("With random slug", func(t *testing.T) {
 		res, err := callCreateHandler(publicEnabledCfg, "", `{"original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
@@ -331,13 +268,41 @@ func TestCreation(t *testing.T) {
 		assert.Equal(t, "http://google.com", rdbRes.Val())
 	})
 
-	t.Run("With slug and domain pair already in use", func(t *testing.T) {
-		res, err := callCreateHandler(publicEnabledCfg, "", `{"domain":"localhost", "slug": "flamengo", "original_url": "http://google.com", "ttl": 23}`)
+	t.Run("With slug already in use, but different domain", func(t *testing.T) {
+		res, err := callCreateHandlerFromDomain(
+			publicEnabledCfg,
+			"",
+			`{"slug": "flamengo", "original_url": "http://bing.com", "ttl": 23}`,
+			"example.com",
+		)
+
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.StatusCode)
 
-		res, err = callCreateHandler(publicEnabledCfg, "", `{"domain":"localhost", "slug": "flamengo", "original_url": "http://bing.com", "ttl": 23}`)
+		var link models.Link
+		err = json.Unmarshal([]byte(res.StringBody), &link)
+		assert.NoError(t, err)
+
+		assert.Equal(t, "example.com", link.Domain)
+		assert.Equal(t, "http://bing.com", link.OriginalURL)
+		assert.NotEmpty(t, link.Slug)
+		assert.Equal(t, "https://example.com/"+link.Slug, link.URL)
+		assert.Equal(t, 23, link.TTL)
+
+		slug := link.Slug
+
+		rdbRes := rdb.Get(context.Background(), "link:example.com/"+slug)
+		assert.Equal(t, "http://bing.com", rdbRes.Val())
+	})
+
+	t.Run("With slug and domain pair already in use", func(t *testing.T) {
+		res, err := callCreateHandler(publicEnabledCfg, "", `{"slug": "flamengo", "original_url": "http://google.com", "ttl": 23}`)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
+
+		res, err = callCreateHandler(publicEnabledCfg, "", `{"slug": "flamengo", "original_url": "http://bing.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusConflict, res.StatusCode)
@@ -352,7 +317,7 @@ func TestCreation(t *testing.T) {
 	})
 
 	t.Run("Check TTL", func(t *testing.T) {
-		res, err := callCreateHandler(publicEnabledCfg, "", `{"slug": "short", "domain": "localhost", "original_url": "http://google.com", "ttl": 23}`)
+		res, err := callCreateHandler(publicEnabledCfg, "", `{"slug": "short", "original_url": "http://google.com", "ttl": 23}`)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.StatusCode)
@@ -365,7 +330,7 @@ func TestCreation(t *testing.T) {
 	t.Run("As not expiring link", func(t *testing.T) {
 		res, err := callCreateHandler(
 			publicEnabledCfg, "",
-			`{"slug": "final", "domain": "localhost", "original_url": "http://google.com", "ttl": 0}`,
+			`{"slug": "final",  "original_url": "http://google.com", "ttl": 0}`,
 		)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
@@ -408,7 +373,6 @@ func TestDurationLimit(t *testing.T) {
 			Enabled:        true,
 			MaxDurationSec: 60,
 			MinDurationSec: 10,
-			AllowedDomains: []string{"localhost"},
 		},
 	}
 
