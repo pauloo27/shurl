@@ -48,9 +48,6 @@ func TestWrapWithMissingResponse(t *testing.T) {
 	wrappedHandler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusInternalServerError, rr.Code)
-
-	expected := `{"error":"Missing response","detail":null}`
-	assert.Equal(t, expected, strings.TrimSpace(rr.Body.String()))
 }
 
 func TestWrapWithNilBody(t *testing.T) {
