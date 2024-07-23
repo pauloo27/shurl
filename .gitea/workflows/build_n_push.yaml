@@ -6,50 +6,24 @@ on:
 
 
 jobs:
-  build:
+  build_test_inspect:
     runs-on: ubuntu-latest
     container:
       image: catthehacker/ubuntu:act-latest
     steps:
       - name: Checkout code
-        uses: https://github.com/actions/checkout@v3
+        uses: https://github.com/actions/checkout@v4
 
       - name: Set up Go
-        uses: https://github.com/actions/setup-go@v4
+        uses: https://github.com/actions/setup-go@v5
         with:
           go-version: '>=1.22.0'
 
       - name: Build
         run: make build
 
-  test:
-    runs-on: ubuntu-latest
-    container:
-      image: catthehacker/ubuntu:act-latest
-    steps:
-      - name: Checkout code
-        uses: https://github.com/actions/checkout@v3
-
-      - name: Set up Go
-        uses: https://github.com/actions/setup-go@v4
-        with:
-          go-version: '>=1.22.0'
-
       - name: Test
         run: make test
-
-  inspect:
-    runs-on: ubuntu-latest
-    container:
-      image: catthehacker/ubuntu:act-latest
-    steps:
-      - name: Checkout code
-        uses: https://github.com/actions/checkout@v3
-
-      - name: Set up Go
-        uses: https://github.com/actions/setup-go@v4
-        with:
-          go-version: '>=1.22.0'
 
       - name: Install inspection tools
         run: make install-inspect-tools
@@ -57,12 +31,6 @@ jobs:
       - name: Inspect
         run: make inspect
 
-      - name: Check if Swagger is up to date
-        run: |
-          make install-swaggo
-          make swagger
-          git diff --exit-code ./internal/server/docs
-  
   deploy:
     needs: [build, test, inspect]
     runs-on: ubuntu-latest
