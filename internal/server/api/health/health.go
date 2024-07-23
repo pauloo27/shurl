@@ -2,10 +2,10 @@ package health
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 
-	"github.com/pauloo27/shurl/internal/ctx"
-	"github.com/pauloo27/shurl/internal/server/api"
+	"github.com/labstack/echo/v4"
 )
 
 type HealthStatus struct {
@@ -21,25 +21,22 @@ type HealthStatus struct {
 //	@Success		200	{object}	HealthStatus
 //	@Failure		500	{object}	HealthStatus
 //	@Router			/healthz [get]
-func Health(r *http.Request) api.Response {
-	providers := ctx.GetProviders(r.Context())
-	log := providers.Logger
-
+func (c *HealthController) Health(ctx echo.Context) error {
 	ok := true
 	status := HealthStatus{
 		Rdb: true,
 	}
 
-	rdbRes := providers.Rdb.Ping(context.Background())
+	rdbRes := c.rdb.Ping(context.Background())
 	if rdbRes.Err() != nil {
 		status.Rdb = false
 		ok = false
 	}
 
 	if !ok {
-		log.Error("Health check failed", "status", status)
-		return api.DetailedError(api.InternalServerErr, status)
+		slog.Error("Health check failed", "status", status)
+		return ctx.JSON(http.StatusInternalServerError, status)
 	}
 
-	return api.Ok(status)
+	return ctx.JSON(http.StatusOK, status)
 }

@@ -2,15 +2,11 @@ package server
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	chi_middleware "github.com/go-chi/chi/v5/middleware"
-	"github.com/pauloo27/shurl/internal/ctx"
-	"github.com/pauloo27/shurl/internal/server/middleware"
-	"github.com/pauloo27/shurl/internal/server/router"
+	"github.com/labstack/echo/v4"
+	"github.com/pauloo27/shurl/internal/providers"
 )
 
 // @title			Shurl API
@@ -19,28 +15,18 @@ import (
 // @license.name	MIT
 // @license.url	https://opensource.org/licenses/MIT
 // @BasePath		/api/v1
-func StartServer(providers *ctx.Providers) error {
-	r := chi.NewRouter()
-
-	r.Use(chi_middleware.RequestID)
-	r.Use(chi_middleware.RealIP)
-	r.Use(chi_middleware.Recoverer)
-
-	r.Use(middleware.ProvidersContext(providers))
-	r.Use(middleware.LoggerMiddleware)
-
-	router.RouteApp(r)
+func StartServer(providers *providers.Providers) error {
+	e := echo.New()
 
 	bindAddr := fmt.Sprintf(":%d", providers.Config.HTTP.Port)
 
-	slog.Info("Starting server", "addr", bindAddr)
+	route(providers, e)
 
 	server := &http.Server{
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
-		Handler:      r,
 		Addr:         bindAddr,
 	}
 
-	return server.ListenAndServe()
+	return e.StartServer(server)
 }

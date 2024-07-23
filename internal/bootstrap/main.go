@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/pauloo27/shurl/internal/config"
-	"github.com/pauloo27/shurl/internal/ctx"
+	"github.com/pauloo27/shurl/internal/providers"
 	"github.com/pauloo27/shurl/internal/providers/redict"
 	"github.com/pauloo27/shurl/internal/server"
 )
@@ -22,7 +22,7 @@ func Start(cfg *config.Config) {
 		os.Exit(1)
 	}
 
-	providers := &ctx.Providers{
+	providers := &providers.Providers{
 		Config: cfg,
 		Rdb:    rdb,
 	}

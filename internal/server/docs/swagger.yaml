@@ -1,11 +1,94 @@
 basePath: /api/v1
 definitions:
-  api.Error-map_string_string:
+  api.BadRequestError:
     properties:
       detail:
-        $ref: '#/definitions/map_string_string'
+        additionalProperties:
+          type: string
+        example:
+          message: Error message
+        type: object
+      error:
+        example: BAD_REQUEST
+        type: string
+    type: object
+  api.ConflictError:
+    properties:
+      detail:
+        additionalProperties:
+          type: string
+        example:
+          message: Error message
+        type: object
+      error:
+        example: CONFLICT
+        type: string
+    type: object
+  api.ForbiddenError:
+    properties:
+      detail:
+        additionalProperties:
+          type: string
+        example:
+          message: Error message
+        type: object
+      error:
+        example: FORBIDDEN
+        type: string
+    type: object
+  api.InternalServerError:
+    properties:
+      detail:
+        additionalProperties:
+          type: string
+        example:
+          message: Error message
+        type: object
+      error:
+        example: INTERNAL_SERVER_ERROR
+        type: string
+    type: object
+  api.NotFoundError:
+    properties:
+      detail:
+        additionalProperties:
+          type: string
+        example:
+          message: Error message
+        type: object
       error:
         example: NOT_FOUND
+        type: string
+    type: object
+  api.UnauthorizedError:
+    properties:
+      detail:
+        additionalProperties:
+          type: string
+        example:
+          message: Error message
+        type: object
+      error:
+        example: UNAUTHORIZED
+        type: string
+    type: object
+  api.ValidationError:
+    properties:
+      detail:
+        items:
+          $ref: '#/definitions/api.ValidationErrorDetail'
+        type: array
+      error:
+        example: VALIDATION_ERROR
+        type: string
+    type: object
+  api.ValidationErrorDetail:
+    properties:
+      error:
+        example: required
+        type: string
+      field:
+        example: username
         type: string
     type: object
   health.HealthStatus:
@@ -27,10 +110,6 @@ definitions:
         type: integer
     required:
     - original_url
-    type: object
-  map_string_string:
-    additionalProperties:
-      type: string
     type: object
   models.Link:
     properties:
@@ -69,11 +148,11 @@ paths:
         "404":
           description: Link not found
           schema:
-            $ref: '#/definitions/api.Error-map_string_string'
+            $ref: '#/definitions/api.NotFoundError'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/api.Error-map_string_string'
+            $ref: '#/definitions/api.InternalServerError'
       summary: Redirect to the original URL
       tags:
       - link
@@ -123,27 +202,27 @@ paths:
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/api.Error-map_string_string'
+            $ref: '#/definitions/api.BadRequestError'
         "401":
           description: Missing API Key
           schema:
-            $ref: '#/definitions/api.Error-map_string_string'
+            $ref: '#/definitions/api.UnauthorizedError'
         "403":
           description: Invalid API Key
           schema:
-            $ref: '#/definitions/api.Error-map_string_string'
+            $ref: '#/definitions/api.ForbiddenError'
         "409":
           description: Duplicated link
           schema:
-            $ref: '#/definitions/api.Error-map_string_string'
+            $ref: '#/definitions/api.ConflictError'
         "422":
           description: Validation error
           schema:
-            $ref: '#/definitions/api.Error-map_string_string'
+            $ref: '#/definitions/api.ValidationError'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/api.Error-map_string_string'
+            $ref: '#/definitions/api.InternalServerError'
       security:
       - ApiKeyAuth: []
       summary: Create a link

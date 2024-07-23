@@ -3,7 +3,7 @@ package validator_test
 import (
 	"testing"
 
-	"github.com/pauloo27/shurl/internal/server/validator"
+	"github.com/pauloo27/shurl/internal/server/core/validator"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -87,37 +87,37 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/api.Error-map_string_string"
+                            "$ref": "#/definitions/api.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "Missing API Key",
                         "schema": {
-                            "$ref": "#/definitions/api.Error-map_string_string"
+                            "$ref": "#/definitions/api.UnauthorizedError"
                         }
                     },
                     "403": {
                         "description": "Invalid API Key",
                         "schema": {
-                            "$ref": "#/definitions/api.Error-map_string_string"
+                            "$ref": "#/definitions/api.ForbiddenError"
                         }
                     },
                     "409": {
                         "description": "Duplicated link",
                         "schema": {
-                            "$ref": "#/definitions/api.Error-map_string_string"
+                            "$ref": "#/definitions/api.ConflictError"
                         }
                     },
                     "422": {
                         "description": "Validation error",
                         "schema": {
-                            "$ref": "#/definitions/api.Error-map_string_string"
+                            "$ref": "#/definitions/api.ValidationError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/api.Error-map_string_string"
+                            "$ref": "#/definitions/api.InternalServerError"
                         }
                     }
                 }
@@ -146,13 +146,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Link not found",
                         "schema": {
-                            "$ref": "#/definitions/api.Error-map_string_string"
+                            "$ref": "#/definitions/api.NotFoundError"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/api.Error-map_string_string"
+                            "$ref": "#/definitions/api.InternalServerError"
                         }
                     }
                 }
@@ -160,15 +160,139 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "api.Error-map_string_string": {
+        "api.BadRequestError": {
             "type": "object",
             "properties": {
                 "detail": {
-                    "$ref": "#/definitions/map_string_string"
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "example": {
+                        "message": "Error message"
+                    }
+                },
+                "error": {
+                    "type": "string",
+                    "example": "BAD_REQUEST"
+                }
+            }
+        },
+        "api.ConflictError": {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "example": {
+                        "message": "Error message"
+                    }
+                },
+                "error": {
+                    "type": "string",
+                    "example": "CONFLICT"
+                }
+            }
+        },
+        "api.ForbiddenError": {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "example": {
+                        "message": "Error message"
+                    }
+                },
+                "error": {
+                    "type": "string",
+                    "example": "FORBIDDEN"
+                }
+            }
+        },
+        "api.InternalServerError": {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "example": {
+                        "message": "Error message"
+                    }
+                },
+                "error": {
+                    "type": "string",
+                    "example": "INTERNAL_SERVER_ERROR"
+                }
+            }
+        },
+        "api.NotFoundError": {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "example": {
+                        "message": "Error message"
+                    }
                 },
                 "error": {
                     "type": "string",
                     "example": "NOT_FOUND"
+                }
+            }
+        },
+        "api.UnauthorizedError": {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "example": {
+                        "message": "Error message"
+                    }
+                },
+                "error": {
+                    "type": "string",
+                    "example": "UNAUTHORIZED"
+                }
+            }
+        },
+        "api.ValidationError": {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ValidationErrorDetail"
+                    }
+                },
+                "error": {
+                    "type": "string",
+                    "example": "VALIDATION_ERROR"
+                }
+            }
+        },
+        "api.ValidationErrorDetail": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "required"
+                },
+                "field": {
+                    "type": "string",
+                    "example": "username"
                 }
             }
         },
@@ -199,12 +323,6 @@ const docTemplate = `{
                     "maximum": 31536000,
                     "minimum": 0
                 }
-            }
-        },
-        "map_string_string": {
-            "type": "object",
-            "additionalProperties": {
-                "type": "string"
             }
         },
         "models.Link": {

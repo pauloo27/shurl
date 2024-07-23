@@ -3,19 +3,20 @@ package link
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/pauloo27/shurl/internal/config"
-	"github.com/pauloo27/shurl/internal/ctx"
 	"github.com/pauloo27/shurl/internal/models"
 	"github.com/pauloo27/shurl/internal/server/api"
-	"github.com/pauloo27/shurl/internal/server/validator"
+	"github.com/pauloo27/shurl/internal/server/core/validator"
 )
 
 var (
-	SlugBlacklist = map[string]bool{
+	slugBlacklist = map[string]bool{
 		"api":        true,
 		"links":      true,
 		"admin":      true,
@@ -24,7 +25,7 @@ var (
 )
 
 const (
-	DefaultSlugLength = 6
+	defaultSlugLength = 6
 )
 
 type CreateLinkBody struct {
@@ -45,57 +46,51 @@ type CreateLinkBody struct {
 //	@Tags			link
 //	@Produce		json
 //	@Router			/links [post]
-//	@Success		201	{object}	models.Link						"Created"
-//	@Failure		400	{object}	api.Error[map[string]string]	"Bad request"
-//	@Failure		500	{object}	api.Error[map[string]string]	"Internal server error"
-//	@Failure		401	{object}	api.Error[map[string]string]	"Missing API Key"
-//	@Failure		403	{object}	api.Error[map[string]string]	"Invalid API Key"
-//	@Failure		409	{object}	api.Error[map[string]string]	"Duplicated link"
-//	@Failure		422	{object}	api.Error[map[string]string]	"Validation error"
+//	@Success		201	{object}	models.Link				"Created"
+//	@Failure		400	{object}	api.BadRequestError		"Bad request"
+//	@Failure		500	{object}	api.InternalServerError	"Internal server error"
+//	@Failure		401	{object}	api.UnauthorizedError	"Missing API Key"
+//	@Failure		403	{object}	api.ForbiddenError		"Invalid API Key"
+//	@Failure		409	{object}	api.ConflictError		"Duplicated link"
+//	@Failure		422	{object}	api.ValidationError		"Validation error"
 //	@Security		ApiKeyAuth
 //	@Param			X-API-Key	header	string	false	"API Key, leave empty for public access (if enabled in the server)"
-func Create(r *http.Request) api.Response {
-	body, validationErr := validator.MustGetBody[CreateLinkBody](r)
+func (c *LinkController) Create(ctx echo.Context) error {
+	body, validationErr := validator.MustBindAndValidate[CreateLinkBody](ctx)
 	if validationErr != nil {
-		return api.DetailedError(validationErr.Error, validationErr.Details)
+		return ctx.JSON(api.DetailedError(validationErr.Error, validationErr.Details))
 	}
-
-	c := r.Context()
-	providers := ctx.GetProviders(c)
-	cfg := providers.Config
-	rdb := providers.Rdb
-	log := providers.Logger
 
 	slug := body.Slug
 	if slug == "" {
-		randomSlug, err := gonanoid.New(DefaultSlugLength)
+		randomSlug, err := gonanoid.New(defaultSlugLength)
 		if err != nil {
-			log.Error("Failed to generate random slug", "err", err)
-			return api.Err(api.InternalServerErr, "Something went wrong")
+			slog.Error("Failed to generate random slug", "err", err)
+			return ctx.JSON(api.Err(api.ErrInternalServer, "Something went wrong"))
 		}
 		slug = randomSlug
 	}
 
-	if SlugBlacklist[slug] {
-		return api.Err(api.ForbiddenErr, "Slug is blacklisted")
+	if slugBlacklist[slug] {
+		return ctx.JSON(api.Err(api.ErrForbidden, "Slug is blacklisted"))
 	}
 
 	var app *config.AppConfig
 
-	apiKey := r.Header.Get("X-API-Key")
+	apiKey := ctx.Request().Header.Get("X-API-Key")
 	if apiKey == "" {
-		app = cfg.Public
+		app = c.cfg.Public
 	} else {
-		app = cfg.AppByAPIKey[apiKey]
+		app = c.cfg.AppByAPIKey[apiKey]
 	}
 
 	if app == nil || !app.Enabled {
-		return api.Err(api.UnauthorizedErr, "Invalid API key")
+		return ctx.JSON(api.Err(api.ErrUnauthorized, "Invalid API key"))
 	}
 
-	domain := r.Host
+	domain := ctx.Request().Host
 
-	log.Info("Creating link", "domain", domain, "slug", slug, "url", body.OriginalURL)
+	slog.Info("Creating link", "domain", domain, "slug", slug, "url", body.OriginalURL)
 
 	ttlInSecs := *body.TTL
 	var ttl time.Duration
@@ -105,11 +100,11 @@ func Create(r *http.Request) api.Response {
 	}
 
 	if app.MaxDurationSec != 0 && ttlInSecs > app.MaxDurationSec {
-		return api.Err(api.BadRequestErr, fmt.Sprintf("TTL too high, max is %d", app.MaxDurationSec))
+		return ctx.JSON(api.Err(api.ErrBadRequest, fmt.Sprintf("TTL too high, max is %d", app.MaxDurationSec)))
 	}
 
 	if app.MinDurationSec != 0 && ttlInSecs < app.MinDurationSec {
-		return api.Err(api.BadRequestErr, fmt.Sprintf("TTL too low, min is %d", app.MinDurationSec))
+		return ctx.JSON(api.Err(api.ErrBadRequest, fmt.Sprintf("TTL too low, min is %d", app.MinDurationSec)))
 	}
 
 	link := models.Link{
@@ -121,15 +116,15 @@ func Create(r *http.Request) api.Response {
 	}
 
 	key := fmt.Sprintf("link:%s/%s", domain, slug)
-	cmd := rdb.SetNX(context.Background(), key, body.OriginalURL, ttl)
+	cmd := c.rdb.SetNX(context.Background(), key, body.OriginalURL, ttl)
 
 	if cmd.Err() != nil {
-		return api.Err(api.InternalServerErr, "Something went wrong")
+		return ctx.JSON(api.Err(api.ErrInternalServer, "Something went wrong"))
 	}
 
 	if !cmd.Val() {
-		return api.Err(api.ConflictErr, "Link already exists")
+		return ctx.JSON(api.Err(api.ErrConflict, "Link already exists"))
 	}
 
-	return api.Created(link)
+	return ctx.JSON(http.StatusCreated, link)
 }
