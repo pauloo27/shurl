@@ -20,6 +20,17 @@ type SampleStructWithJSONTags struct {
 	IgnoreMe string `json:"-"`
 }
 
+type Address struct {
+	City   string `json:"city" validate:"required"`
+	State  string `json:"state" validate:"required"`
+	Street string `json:"street" validate:"required"`
+}
+
+type SampleNestedStructWithJSONTags struct {
+	Name    string  `json:"name,omitempty" validate:"omitempty,min=3,max=20"`
+	Address Address `json:"address" validate:"required"`
+}
+
 func TestValidData(t *testing.T) {
 	ttl := 2
 	data := SampleStruct{
@@ -97,4 +108,33 @@ func TestInvalidDataWithJSONTags(t *testing.T) {
 
 	assert.Equal(t, "ttl", errTTL.Field)
 	assert.Equal(t, "required", errTTL.Error)
+}
+
+func TestNestedValidData(t *testing.T) {
+	data := SampleNestedStructWithJSONTags{
+		Name: "Antony Soprano",
+		Address: Address{
+			City:   "New Jersey",
+			State:  "New Jersey",
+			Street: "1234 Soprano St",
+		},
+	}
+
+	errs := validator.Validate(data)
+	assert.Empty(t, errs)
+}
+
+func TestNestedInvalidData(t *testing.T) {
+	data := SampleNestedStructWithJSONTags{
+		Name: "Antony Soprano",
+		Address: Address{
+			City:   "New Jersey",
+			Street: "1234 Soprano St",
+		},
+	}
+
+	errs := validator.Validate(data)
+	errState := errs[0]
+	assert.Equal(t, "address.state", errState.Field)
+	assert.Equal(t, "required", errState.Error)
 }

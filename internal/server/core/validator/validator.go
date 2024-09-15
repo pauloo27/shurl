@@ -38,7 +38,8 @@ func Validate[T any](v T) []*ValidationError {
 	validationErrs := make([]*ValidationError, len(rawErrs.(validator.ValidationErrors)))
 
 	for i, err := range rawErrs.(validator.ValidationErrors) {
-		fieldName := err.Field()
+		namespace := strings.SplitN(err.Namespace(), ".", 2)
+		fieldName := namespace[1]
 
 		var errorMessage string
 		if err.Param() != "" {
