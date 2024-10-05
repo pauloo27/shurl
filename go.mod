@@ -5,14 +5,13 @@ go 1.22
 require (
 	github.com/alicebob/miniredis/v2 v2.32.1
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/lmittmann/tint v1.0.3
 	github.com/matoous/go-nanoid/v2 v2.0.0
 	github.com/redis/go-redis/v9 v9.3.0
 	github.com/stretchr/testify v1.8.4
-	github.com/swaggo/http-swagger/v2 v2.0.2
+	github.com/swaggo/echo-swagger v1.4.1
 	github.com/swaggo/swag v1.16.3
 )
 
@@ -36,7 +35,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/swaggo/echo-swagger v1.4.1 // indirect
 	github.com/swaggo/files/v2 v2.0.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
