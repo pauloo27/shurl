@@ -93,7 +93,7 @@ definitions:
     type: object
   health.HealthStatus:
     properties:
-      rdb:
+      valkey:
         type: boolean
     type: object
   link.CreateLinkBody:

@@ -2,16 +2,22 @@ package link_test
 
 import (
 	"github.com/alicebob/miniredis/v2"
-	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go"
 )
 
-func mockRedis() *redis.Client {
+func mockValkey() valkey.Client {
 	s, err := miniredis.Run()
 	if err != nil {
 		panic(err)
 	}
 
-	return redis.NewClient(&redis.Options{
-		Addr: s.Addr(),
+	client, err := valkey.NewClient(valkey.ClientOption{
+		InitAddress:  []string{s.Addr()},
+		DisableCache: true,
 	})
+	if err != nil {
+		panic(err)
+	}
+
+	return client
 }

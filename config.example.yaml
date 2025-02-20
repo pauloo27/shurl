@@ -10,7 +10,7 @@ http:
   # http api bind port
   port: 42069
 
-redict:
+valkey:
   # redict address with port
   address: 'localhost:6379'
   # redict password

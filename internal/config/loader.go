@@ -47,8 +47,8 @@ func ensureNotNil(cfg *Config) {
 	if cfg.HTTP == nil {
 		cfg.HTTP = &HTTPConfig{}
 	}
-	if cfg.Redict == nil {
-		cfg.Redict = &RedictConfig{}
+	if cfg.Valkey == nil {
+		cfg.Valkey = &Valkey{}
 	}
 	if cfg.Public == nil {
 		cfg.Public = &AppConfig{}

@@ -3,16 +3,16 @@ package link
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/pauloo27/shurl/internal/config"
-	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go"
 )
 
 type LinkController struct {
-	rdb *redis.Client
-	cfg *config.Config
+	vkey valkey.Client
+	cfg  *config.Config
 }
 
-func NewLinkController(cfg *config.Config, rdb *redis.Client) *LinkController {
-	return &LinkController{rdb, cfg}
+func NewLinkController(cfg *config.Config, vkey valkey.Client) *LinkController {
+	return &LinkController{vkey, cfg}
 }
 
 func (c *LinkController) Route(e *echo.Echo) {

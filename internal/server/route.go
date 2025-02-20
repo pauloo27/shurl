@@ -26,11 +26,11 @@ func routeSwagger(g *echo.Echo) {
 }
 
 func routeHealth(providers *providers.Providers, e *echo.Echo) {
-	c := health.NewHealthController(providers.Rdb)
+	c := health.NewHealthController(providers.Valkey)
 	c.Route(e)
 }
 
 func routeLink(providers *providers.Providers, e *echo.Echo) {
-	c := link.NewLinkController(providers.Config, providers.Rdb)
+	c := link.NewLinkController(providers.Config, providers.Valkey)
 	c.Route(e)
 }

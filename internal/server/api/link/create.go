@@ -13,6 +13,7 @@ import (
 	"github.com/pauloo27/shurl/internal/models"
 	"github.com/pauloo27/shurl/internal/server/api"
 	"github.com/pauloo27/shurl/internal/server/core/validator"
+	"github.com/valkey-io/valkey-go"
 )
 
 var (
@@ -116,14 +117,15 @@ func (c *LinkController) Create(ctx echo.Context) error {
 	}
 
 	key := fmt.Sprintf("link:%s/%s", domain, slug)
-	cmd := c.rdb.SetNX(context.Background(), key, body.OriginalURL, ttl)
+	cmd := c.vkey.B().Set().Key(key).Value(body.OriginalURL).Nx().Ex(ttl).Build()
+	res := c.vkey.Do(context.Background(), cmd)
 
-	if cmd.Err() != nil {
+	if err := res.Error(); err != nil {
+		if valkey.IsValkeyNil(err) {
+			return ctx.JSON(api.Err(api.ErrConflict, "Link already exists"))
+		}
+		slog.Error("Failed to set key", "err", err)
 		return ctx.JSON(api.Err(api.ErrInternalServer, "Something went wrong"))
-	}
-
-	if !cmd.Val() {
-		return ctx.JSON(api.Err(api.ErrConflict, "Link already exists"))
 	}
 
 	return ctx.JSON(http.StatusCreated, link)

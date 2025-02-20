@@ -9,7 +9,7 @@ import (
 )
 
 type HealthStatus struct {
-	Rdb bool `json:"rdb"`
+	Valkey bool `json:"valkey"`
 }
 
 // Health godoc
@@ -24,12 +24,12 @@ type HealthStatus struct {
 func (c *HealthController) Health(ctx echo.Context) error {
 	ok := true
 	status := HealthStatus{
-		Rdb: true,
+		Valkey: true,
 	}
 
-	rdbRes := c.rdb.Ping(context.Background())
-	if rdbRes.Err() != nil {
-		status.Rdb = false
+	cmd := c.vkey.B().Ping().Build()
+	if res := c.vkey.Do(context.Background(), cmd); res.Error() != nil {
+		status.Valkey = false
 		ok = false
 	}
 

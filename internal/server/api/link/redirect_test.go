@@ -12,21 +12,30 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pauloo27/shurl/internal/config"
 	"github.com/pauloo27/shurl/internal/server/api/link"
-	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
+	"github.com/valkey-io/valkey-go"
 )
 
 func TestRedirect(t *testing.T) {
-	rdb := mockRedis()
+	vkey := mockValkey()
 
-	rdb.FlushDB(context.Background())
-	rdb.SetNX(context.Background(), "link:localhost/hello", "http://example.com", 30*time.Second)
-	rdb.SetNX(context.Background(), "link:127.0.0.1/world", "http://example.com/world", 30*time.Second)
+	mustDo := func(cmd valkey.Completed) {
+		res := vkey.Do(context.Background(), cmd)
+		assert.NoError(t, res.Error())
+	}
+
+	flushCmd := vkey.B().Flushdb().Build()
+	setHello := vkey.B().Set().Key("link:localhost/hello").Value("http://example.com").Nx().Ex(30 * time.Second).Build()
+	setWorld := vkey.B().Set().Key("link:127.0.0.1/world").Value("http://example.com/world").Nx().Ex(30 * time.Second).Build()
+
+	mustDo(flushCmd)
+	mustDo(setHello)
+	mustDo(setWorld)
 
 	t.Run("Valid domain and slug pair", func(t *testing.T) {
 		cfg := &config.Config{}
 
-		rec, err := callRedirectHandler(cfg, rdb, "localhost", "hello")
+		rec, err := callRedirectHandler(cfg, vkey, "localhost", "hello")
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusTemporaryRedirect, rec.Code)
 		assert.Equal(t, "http://example.com", rec.Header().Get("Location"))
@@ -35,7 +44,7 @@ func TestRedirect(t *testing.T) {
 	t.Run("Mismatched domain and slug pair", func(t *testing.T) {
 		cfg := &config.Config{}
 
-		rec, err := callRedirectHandler(cfg, rdb, "localhost", "world")
+		rec, err := callRedirectHandler(cfg, vkey, "localhost", "world")
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 		assert.Equal(t,
@@ -47,7 +56,7 @@ func TestRedirect(t *testing.T) {
 	t.Run("Slug not found", func(t *testing.T) {
 		cfg := &config.Config{}
 
-		rec, err := callRedirectHandler(cfg, rdb, "localhost", "slug")
+		rec, err := callRedirectHandler(cfg, vkey, "localhost", "slug")
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 		assert.Equal(t,
@@ -57,15 +66,14 @@ func TestRedirect(t *testing.T) {
 	})
 }
 
-func TestRdbIsClosed(t *testing.T) {
-	rdb := mockRedis()
+func TestValkeyIsClosed(t *testing.T) {
+	vkey := mockValkey()
 	cfg := &config.Config{}
 
-	err := rdb.Close()
-	assert.NoError(t, err)
+	vkey.Close()
 
-	t.Run("Rdb is closed", func(t *testing.T) {
-		rec, err := callRedirectHandler(cfg, rdb, "localhost", "slug")
+	t.Run("Valkey is closed", func(t *testing.T) {
+		rec, err := callRedirectHandler(cfg, vkey, "localhost", "slug")
 
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
@@ -77,7 +85,7 @@ func TestRdbIsClosed(t *testing.T) {
 }
 
 func callRedirectHandler(
-	cfg *config.Config, rdb *redis.Client,
+	cfg *config.Config, vkey valkey.Client,
 	domain, slug string,
 ) (*httptest.ResponseRecorder, error) {
 	path := fmt.Sprintf("/%s", slug)
@@ -90,7 +98,7 @@ func callRedirectHandler(
 	ctx.SetPath(path)
 	ctx.SetParamNames("slug")
 	ctx.SetParamValues(slug)
-	c := link.NewLinkController(cfg, rdb)
+	c := link.NewLinkController(cfg, vkey)
 	err := c.Redirect(ctx)
 	return rec, err
 }

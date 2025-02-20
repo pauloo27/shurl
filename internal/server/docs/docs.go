@@ -299,7 +299,7 @@ const docTemplate = `{
         "health.HealthStatus": {
             "type": "object",
             "properties": {
-                "rdb": {
+                "valkey": {
                     "type": "boolean"
                 }
             }

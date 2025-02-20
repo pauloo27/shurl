@@ -2,15 +2,15 @@ package health
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go"
 )
 
 type HealthController struct {
-	rdb *redis.Client
+	vkey valkey.Client
 }
 
-func NewHealthController(rdb *redis.Client) *HealthController {
-	return &HealthController{rdb}
+func NewHealthController(vkey valkey.Client) *HealthController {
+	return &HealthController{vkey}
 }
 
 func (c *HealthController) Route(e *echo.Echo) {

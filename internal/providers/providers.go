@@ -2,10 +2,10 @@ package providers
 
 import (
 	"github.com/pauloo27/shurl/internal/config"
-	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go"
 )
 
 type Providers struct {
 	Config *config.Config
-	Rdb    *redis.Client
+	Valkey valkey.Client
 }

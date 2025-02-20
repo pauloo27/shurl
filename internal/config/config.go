@@ -7,7 +7,7 @@ import (
 type Config struct {
 	Log    *LogConfig
 	HTTP   *HTTPConfig
-	Redict *RedictConfig
+	Valkey *Valkey
 
 	Public *AppConfig
 
@@ -34,7 +34,7 @@ type HTTPConfig struct {
 	Port int
 }
 
-type RedictConfig struct {
+type Valkey struct {
 	Address  string
 	Password string
 	DB       int

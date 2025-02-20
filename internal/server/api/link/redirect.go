@@ -2,14 +2,13 @@ package link
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pauloo27/shurl/internal/server/api"
-	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go"
 )
 
 // Redirect godoc
@@ -29,15 +28,22 @@ func (c *LinkController) Redirect(ctx echo.Context) error {
 	slog.Info("h-hello?", "slug", slug, "domain", domain)
 	key := fmt.Sprintf("link:%s/%s", domain, slug)
 
-	res := c.rdb.Get(context.Background(), key)
+	cmd := c.vkey.B().Get().Key(key).Build()
+	res := c.vkey.Do(context.Background(), cmd)
 
-	if err := res.Err(); err != nil {
-		if errors.Is(err, redis.Nil) {
+	if err := res.Error(); err != nil {
+		if valkey.IsValkeyNil(err) {
 			return ctx.JSON(api.Err(api.ErrNotFound, "Link not found"))
 		}
 		slog.Error("Failed to get link", "slug", slug, "err", err)
 		return ctx.JSON(api.Err(api.ErrInternalServer, "Something went wrong"))
 	}
 
-	return ctx.Redirect(http.StatusTemporaryRedirect, res.Val())
+	value, err := res.ToString()
+	if err != nil {
+		slog.Error("Failed to parse string value", "slug", slug, "err", err)
+		return ctx.JSON(api.Err(api.ErrInternalServer, "Something went wrong"))
+	}
+
+	return ctx.Redirect(http.StatusTemporaryRedirect, value)
 }
