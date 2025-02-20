@@ -64,6 +64,10 @@ installs:
           subPath: config.yaml
           readOnly: true
 
+      podAnnotations:
+        # to ensure the pod is restarted even if only the config was changed
+        rollme: "{{ randomUUID }}"
+
       service:
         type: ClusterIP
         port: 42069
