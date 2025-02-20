@@ -1,8 +1,6 @@
 module github.com/pauloo27/shurl
 
-go 1.22.0
-
-toolchain go1.24.0
+go 1.24.0
 
 require (
 	github.com/alicebob/miniredis/v2 v2.32.1
