@@ -5,10 +5,12 @@ repos:
     url: https://code.db.cafe/api/packages/dbcafe/helm
 
 installs:
-  - name: shurl
+  - name: valkey
     chart: oci://registry-1.docker.io/bitnamicharts/valkey
     values:
       architecture: standalone
+      auth: 
+        enabled: false
       commonConfiguration: |-
         appendonly yes
         save ""
@@ -35,7 +37,7 @@ installs:
                 port: 42069
 
               valkey:
-                address: 'valkey-service.shurl.svc.cluster.local:6379'
+                address: 'valkey-headless.shurl.svc.cluster.local:6379'
                 password: ''
                 db: 0
 

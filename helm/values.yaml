@@ -1,0 +1,25 @@
+public-app:
+  image:
+    repository: code.db.cafe/pauloo27/shurl
+    pullPolicy: Always
+    tag: master
+
+  service:
+    type: ClusterIP
+    port: 42069
+
+  istio:
+    enabled: false
+
+  livenessProbe:
+    httpGet:
+      path: /api/v1/healthz
+      port: 42069
+    initialDelaySeconds: 10
+    periodSeconds: 30
+  readinessProbe:
+    httpGet:
+      path: /api/v1/healthz
+      port: 42069
+    initialDelaySeconds: 5
+    periodSeconds: 5
