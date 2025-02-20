@@ -79,6 +79,6 @@ jobs:
         with:
           base_url: https://k7z.db.cafe/api/v0
           team_name: pauloo27
-          project_name: notepad
+          project_name: shurl
           api_key: ${{ secrets.K7Z_SECRET }}
           ref: ${{ github.ref_name }}
