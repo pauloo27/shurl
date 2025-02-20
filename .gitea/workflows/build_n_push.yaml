@@ -75,9 +75,11 @@ jobs:
           push: true
           tags: code.db.cafe/pauloo27/shurl:${{ env.COMMIT_SHORT_SHA }},code.db.cafe/pauloo27/shurl:${{ github.ref_name }}
 
-      - name: Rollout deployment using k7z
-        uses: https://code.db.cafe/actions/k7z-rollout@master
+      - name: Upgrade install 
+        uses: https://code.db.cafe/actions/k7z-upgrade@v1.0.0
         with:
-          base_url: https://k7z.db.cafe
-          project_id: shurl
-          secret: ${{ secrets.K7Z_SECRET }}
+          base_url: https://k7z.db.cafe/api/v0
+          team_name: pauloo27
+          project_name: notepad
+          api_key: ${{ secrets.K7Z_SECRET }}
+          ref: ${{ github.ref_name }}

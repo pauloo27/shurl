@@ -1,0 +1,89 @@
+name: Shurl
+
+repos:
+  - name: dbcafe-base
+    url: https://code.db.cafe/api/packages/dbcafe/helm
+
+installs:
+  - name: shurl
+    chart: oci://registry-1.docker.io/bitnamicharts/valkey
+    values:
+      architecture: standalone
+      commonConfiguration: |-
+        appendonly yes
+        save ""
+
+  - name: shurl
+    chart: dbcafe-base/public-app
+    values:
+      image:
+        repository: code.db.cafe/pauloo27/shurl
+        pullPolicy: Always
+        tag: master
+
+      secrets:
+        - name: shurl-config-secret
+          type: Opaque
+          data:
+            config.yaml: |
+              log:
+                level: 'info'
+                type: 'json'
+                showSource: true
+
+              http:
+                port: 42069
+
+              valkey:
+                address: 'valkey-service.shurl.svc.cluster.local:6379'
+                password: ''
+                db: 0
+
+              public:
+                enabled: false
+                allowedDomains: []
+
+              apps:
+                mrzt:
+                  enabled: true
+                  apiKey: {{ .Project.Secrets.MztApiKey }}
+                  allowedDomains:
+                    - url.db.cafe
+      
+      volumes:
+        - name: shurl-config-volume
+          secret:
+            secretName: shurl-config-secret
+            defaultMode: 420
+    
+      volumeMounts:
+        - name: shurl-config-volume
+          mountPath: /app/config.yaml
+          subPath: config.yaml
+          readOnly: true
+
+      service:
+        type: ClusterIP
+        port: 42069
+
+      istio:
+        enabled: true
+        host: url.db.cafe
+
+      livenessProbe:
+        httpGet:
+          path: /api/v1/healthz
+          port: 42069
+        initialDelaySeconds: 10
+        periodSeconds: 30
+      readinessProbe:
+        httpGet:
+          path: /api/v1/healthz
+          port: 42069
+        initialDelaySeconds: 5
+        periodSeconds: 5
+
+envs:
+  - name: prod
+    namespace: shurl
+    branch: master
