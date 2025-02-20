@@ -48,7 +48,7 @@ installs:
               apps:
                 mrzt:
                   enabled: true
-                  apiKey: {{ .Project.Secrets.MztApiKey }}
+                  apiKey: {{ .Project.Secrets.MZT_API_KEY }}
                   allowedDomains:
                     - url.db.cafe
       
