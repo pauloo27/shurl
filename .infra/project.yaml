@@ -9,6 +9,11 @@ installs:
     chart: oci://registry-1.docker.io/bitnamicharts/valkey
     values:
       architecture: standalone
+      primary:
+        livenessProbe:
+          initialDelaySeconds: 5
+        readinessProbe:
+          initialDelaySeconds: 5
       auth: 
         enabled: false
       commonConfiguration: |-
