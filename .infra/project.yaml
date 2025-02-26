@@ -7,6 +7,7 @@ repos:
 installs:
   - name: valkey
     chart: oci://registry-1.docker.io/bitnamicharts/valkey
+    chartVersion: '2.3.0'
     values:
       architecture: standalone
       primary:
