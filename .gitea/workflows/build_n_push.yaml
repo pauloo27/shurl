@@ -75,10 +75,13 @@ jobs:
           tags: code.db.cafe/pauloo27/shurl:${{ env.COMMIT_SHORT_SHA }},code.db.cafe/pauloo27/shurl:${{ github.ref_name }}
 
       - name: Upgrade install 
-        uses: https://code.db.cafe/actions/k7z-upgrade@v1.0.0
+        uses: https://code.db.cafe/actions/k7z-upgrade@v1.1.0
         with:
           base_url: https://k7z.db.cafe/api/v0
           team_name: pauloo27
           project_name: shurl
           api_key: ${{ secrets.K7Z_SECRET }}
           ref: ${{ github.ref_name }}
+          data:
+            Tag: ${{ env.COMMIT_SHORT_SHA }}
+

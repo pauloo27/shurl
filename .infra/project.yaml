@@ -26,8 +26,8 @@ installs:
     values:
       image:
         repository: code.db.cafe/pauloo27/shurl
-        pullPolicy: Always
-        tag: master
+        pullPolicy: IfNotPresent
+        tag: {{ .Data.Tag | orDefault .Ref }}
 
       secrets:
         - name: shurl-config-secret
