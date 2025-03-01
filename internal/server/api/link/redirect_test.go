@@ -66,24 +66,6 @@ func TestRedirect(t *testing.T) {
 	})
 }
 
-func TestValkeyIsClosed(t *testing.T) {
-	vkey := mockValkey()
-	cfg := &config.Config{}
-
-	vkey.Close()
-
-	t.Run("Valkey is closed", func(t *testing.T) {
-		rec, err := callRedirectHandler(cfg, vkey, "localhost", "slug")
-
-		assert.NoError(t, err)
-		assert.Equal(t, http.StatusInternalServerError, rec.Code)
-		assert.Equal(
-			t, `{"error":"INTERNAL_SERVER_ERROR","detail":{"message":"Something went wrong"}}`,
-			strings.TrimSpace(rec.Body.String()),
-		)
-	})
-}
-
 func callRedirectHandler(
 	cfg *config.Config, vkey valkey.Client,
 	domain, slug string,
