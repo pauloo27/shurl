@@ -1,0 +1,52 @@
+valkey:
+  architecture: standalone
+  primary:
+    livenessProbe:
+      initialDelaySeconds: 5
+    readinessProbe:
+      initialDelaySeconds: 5
+  auth: 
+    enabled: false
+  commonConfiguration: |-
+    appendonly yes
+    save ""
+
+shurl:
+  image:
+    repository: code.db.cafe/pauloo27/shurl
+    pullPolicy: IfNotPresent
+    tag: {{ releaseData "tag" }}
+  
+  volumes:
+    - name: shurl-config-volume
+      secret:
+        secretName: shurl-config-secret
+        defaultMode: 420
+
+  volumeMounts:
+    - name: shurl-config-volume
+      mountPath: /app/config.yaml
+      subPath: config.yaml
+      readOnly: true
+
+  podAnnotations:
+    # to ensure the pod is restarted even if only the config was changed
+    rollme: "{{ randomUUID }}"
+
+  service:
+    type: ClusterIP
+    port: 42069
+
+  livenessProbe:
+    httpGet:
+      path: /api/v1/healthz
+      port: 42069
+    initialDelaySeconds: 10
+    periodSeconds: 30
+  readinessProbe:
+    httpGet:
+      path: /api/v1/healthz
+      port: 42069
+    initialDelaySeconds: 5
+    periodSeconds: 5
+

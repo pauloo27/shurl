@@ -1,0 +1,33 @@
+shurl:
+  secrets:
+    - name: shurl-config-secret
+      type: Opaque
+      data:
+        config.yaml: |
+          log:
+            level: 'info'
+            type: 'json'
+            showSource: true
+
+          http:
+            port: 42069
+
+          valkey:
+            address: 'valkey-headless.{{ .Namespace }}.svc.cluster.local:6379'
+            password: ''
+            db: 0
+
+          public:
+            enabled: false
+            allowedDomains: []
+
+          apps:
+            mrzt:
+              enabled: true
+              apiKey: {{ projectSecret "MZT_API_KEY" }}
+              allowedDomains:
+                - url-dev.db.cafe
+
+  istio:
+    enabled: true
+    host: url-dev.db.cafe

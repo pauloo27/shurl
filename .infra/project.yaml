@@ -5,97 +5,29 @@ repos:
     url: https://code.db.cafe/api/packages/dbcafe/helm
 
 installs:
+  - name: shurl
+    chart: dbcafe-base/public-app
+
   - name: valkey
     chart: oci://registry-1.docker.io/bitnamicharts/valkey
     chartVersion: '2.3.0'
-    values:
-      architecture: standalone
-      primary:
-        livenessProbe:
-          initialDelaySeconds: 5
-        readinessProbe:
-          initialDelaySeconds: 5
-      auth: 
-        enabled: false
-      commonConfiguration: |-
-        appendonly yes
-        save ""
-
-  - name: shurl
-    chart: dbcafe-base/public-app
-    values:
-      image:
-        repository: code.db.cafe/pauloo27/shurl
-        pullPolicy: IfNotPresent
-        tag: {{ .Data.Tag | orDefault .Ref }}
-
-      secrets:
-        - name: shurl-config-secret
-          type: Opaque
-          data:
-            config.yaml: |
-              log:
-                level: 'info'
-                type: 'json'
-                showSource: true
-
-              http:
-                port: 42069
-
-              valkey:
-                address: 'valkey-headless.shurl.svc.cluster.local:6379'
-                password: ''
-                db: 0
-
-              public:
-                enabled: false
-                allowedDomains: []
-
-              apps:
-                mrzt:
-                  enabled: true
-                  apiKey: {{ .Project.Secrets.MZT_API_KEY }}
-                  allowedDomains:
-                    - url.db.cafe
-      
-      volumes:
-        - name: shurl-config-volume
-          secret:
-            secretName: shurl-config-secret
-            defaultMode: 420
-    
-      volumeMounts:
-        - name: shurl-config-volume
-          mountPath: /app/config.yaml
-          subPath: config.yaml
-          readOnly: true
-
-      podAnnotations:
-        # to ensure the pod is restarted even if only the config was changed
-        rollme: "{{ randomUUID }}"
-
-      service:
-        type: ClusterIP
-        port: 42069
-
-      istio:
-        enabled: true
-        host: url.db.cafe
-
-      livenessProbe:
-        httpGet:
-          path: /api/v1/healthz
-          port: 42069
-        initialDelaySeconds: 10
-        periodSeconds: 30
-      readinessProbe:
-        httpGet:
-          path: /api/v1/healthz
-          port: 42069
-        initialDelaySeconds: 5
-        periodSeconds: 5
 
 envs:
   - name: prod
     namespace: shurl
-    branch: master
+    for: 
+      branch: master
+    values: 
+      - values/common.yaml
+      - values/prod.yaml
+
+  - name: dev
+    namespace: shurl-dev
+    for:
+      branch: dev
+    installs:
+      - name: valkey
+        disabled: true
+    values: 
+      - values/common.yaml
+      - values/dev.yaml
