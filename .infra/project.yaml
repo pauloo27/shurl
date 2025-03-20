@@ -25,9 +25,6 @@ envs:
     namespace: shurl-dev
     for:
       branch: dev
-    installs:
-      - name: valkey
-        disabled: true
     values: 
       - values/common.yaml
       - values/dev.yaml
