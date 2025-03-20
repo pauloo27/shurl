@@ -82,5 +82,7 @@ jobs:
           project_name: shurl
           api_key: ${{ secrets.K7Z_SECRET }}
           ref: ${{ github.ref_name }}
-          data: '{"Tag":"${{ env.COMMIT_SHORT_SHA }}"}'
-
+          data: |
+              {
+                "tag": "${{ env.COMMIT_SHORT_SHA }}"
+              }
