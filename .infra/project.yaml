@@ -1,4 +1,5 @@
 name: Shurl
+version: v2
 
 repos:
   - name: dbcafe-base
