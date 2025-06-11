@@ -63,7 +63,7 @@ func mustHaveNoNilPointers(t *testing.T, cfg config.Config) {
 	valType := reflect.TypeOf(cfg)
 	valVal := reflect.ValueOf(cfg)
 
-	for i := 0; i < valType.NumField(); i++ {
+	for i := range valType.NumField() {
 		field := valType.Field(i)
 
 		// skip fields ignored by yaml
@@ -81,7 +81,7 @@ func mustHaveNoZeroValue(t *testing.T, cfg *config.Config) {
 	check(t, cfg, "Config")
 }
 
-func check(t *testing.T, val interface{}, path string) {
+func check(t *testing.T, val any, path string) {
 	valType := reflect.TypeOf(val)
 	valVal := reflect.ValueOf(val)
 
@@ -100,7 +100,7 @@ func check(t *testing.T, val interface{}, path string) {
 			assert.NotZerof(t, val, "Value for %s must NOT be zero, but was", path)
 		}
 	case reflect.Struct:
-		for i := 0; i < valType.NumField(); i++ {
+		for i := range valType.NumField() {
 			field := valType.Field(i)
 
 			// skip fields ignored by yaml
@@ -118,7 +118,7 @@ func check(t *testing.T, val interface{}, path string) {
 			check(t, valVal.MapIndex(key).Interface(), fmt.Sprintf("%s[%s]", path, key.String()))
 		}
 	case reflect.Slice:
-		for i := 0; i < valVal.Len(); i++ {
+		for i := range valVal.Len() {
 			check(t, valVal.Index(i).Interface(), fmt.Sprintf("%s[%d]", path, i))
 		}
 	default:
