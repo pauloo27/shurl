@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: shurl-valkey-prod
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: registry-1.docker.io/bitnamicharts
+      chart: valkey
+      targetRevision: "2.3.*"
+      helm:
+        valueFiles:
+          - "$values/infra/helm/valkey.yaml"
+    - repoURL: https://code.db.cafe/pauloo27/shurl.git
+      targetRevision: master
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: shurl
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

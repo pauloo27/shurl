@@ -10,7 +10,7 @@ spec:
     targetRevision: master
     path: infra/argo
     directory:
-      include: "{dev.yaml,prod.yaml}"
+      include: "{dev.yaml,prod.yaml,valkey-dev.yaml,valkey-prod.yaml}"
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
