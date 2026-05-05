@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: shurl-dev
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://code.db.cafe/api/packages/dbcafe/helm
+      chart: public-app
+      targetRevision: "1.8.*"
+      helm:
+        valueFiles:
+          - "$values/infra/helm/values.yaml"
+          - "$values/infra/helm/values.dev.yaml"
+    - repoURL: https://code.db.cafe/pauloo27/shurl.git
+      targetRevision: dev
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: shurl-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

@@ -1,0 +1,26 @@
+image:
+  tag: dev
+
+imageUpdater:
+  enabled: true
+  images:
+    shurl:
+      imageName: "code.db.cafe/pauloo27/shurl:dev"
+      updateStrategy: "digest"
+      namePattern: "shurl-dev"
+  writeBackMethod: "argocd"
+
+externalSecrets:
+  shurl-config-secret:
+    data:
+      - secretKey: config.yaml
+        sourceRef:
+          storeRef:
+            name: bitwarden-notes
+            kind: ClusterSecretStore
+        remoteRef:
+          key: e5405a22-ba38-4b94-97b0-870ae37e0dde
+
+istio:
+  enabled: true
+  host: url-dev.db.cafe

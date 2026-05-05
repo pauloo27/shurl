@@ -1,0 +1,35 @@
+image:
+  repository: code.db.cafe/pauloo27/shurl
+  pullPolicy: IfNotPresent
+
+volumes:
+  - name: shurl-config-volume
+    secret:
+      secretName: shurl-config-secret
+      defaultMode: 420
+
+volumeMounts:
+  - name: shurl-config-volume
+    mountPath: /app/config.yaml
+    subPath: config.yaml
+    readOnly: true
+
+podAnnotations:
+  rollme: "placeholder"
+
+service:
+  type: ClusterIP
+  port: 42069
+
+livenessProbe:
+  httpGet:
+    path: /api/v1/healthz
+    port: 42069
+  initialDelaySeconds: 10
+  periodSeconds: 30
+readinessProbe:
+  httpGet:
+    path: /api/v1/healthz
+    port: 42069
+  initialDelaySeconds: 5
+  periodSeconds: 5

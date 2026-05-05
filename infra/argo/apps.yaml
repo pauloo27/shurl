@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: shurl
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://code.db.cafe/pauloo27/shurl.git
+    targetRevision: master
+    path: infra/argo
+    directory:
+      include: "{dev.yaml,prod.yaml}"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
