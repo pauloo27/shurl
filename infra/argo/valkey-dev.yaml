@@ -11,6 +11,7 @@ spec:
       helm:
         valueFiles:
           - "$values/infra/helm/valkey.yaml"
+          - "$values/infra/helm/valkey.dev.yaml"
     - repoURL: https://code.db.cafe/pauloo27/shurl.git
       targetRevision: dev
       ref: values
