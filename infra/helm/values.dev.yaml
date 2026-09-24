@@ -16,10 +16,11 @@ externalSecrets:
       - secretKey: config.yaml
         sourceRef:
           storeRef:
-            name: bitwarden-notes
+            name: openbao
             kind: ClusterSecretStore
         remoteRef:
-          key: e5405a22-ba38-4b94-97b0-870ae37e0dde
+          key: shurl-dev/shurl-config-secret
+          property: config.yaml
 
 istio:
   enabled: true
