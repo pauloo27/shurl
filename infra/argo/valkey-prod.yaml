@@ -5,17 +5,10 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  sources:
-    - repoURL: oci://registry-1.docker.io/bitnamicharts/valkey
-      chart: .
-      targetRevision: "2.3.*"
-      helm:
-        valueFiles:
-          - "$values/infra/helm/valkey.yaml"
-          - "$values/infra/helm/valkey.prod.yaml"
-    - repoURL: https://code.db.cafe/pauloo27/shurl.git
-      targetRevision: master
-      ref: values
+  source:
+    repoURL: https://code.db.cafe/pauloo27/shurl.git
+    targetRevision: master
+    path: infra/valkey/prod
   destination:
     server: https://kubernetes.default.svc
     namespace: shurl
