@@ -1,3 +1,0 @@
-primary:
-  persistence:
-    existingClaim: valkey-data-valkey-primary-0
